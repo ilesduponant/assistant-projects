@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PV Mise En Service</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>PV Mise En Service</h1>
+      <form id="pvForm">
+        <label for="title">Titre : *</label>
+        <input type="text" id="title" placeholder="Titre du PV" required />
+
+        <label for="responsable">Responsable chantier : *</label>
+        <input type="text" id="responsable" placeholder="Ex: Stéphane" required />
+
+        <label for="entreprise">Entreprise : *</label>
+        <input type="text" id="entreprise" placeholder="Ex: Technilevage" required />
+
+        <label for="startDate">Date début : *</label>
+        <input type="date" id="startDate" required />
+
+        <label for="endDate">Date fin : *</label>
+        <input type="date" id="endDate" required />
+
+        <label for="summary">Description du projet : *</label>
+        <textarea id="summary" rows="4" required></textarea>
+        
+        <h3>Historique *</h3>
+        <label for="historique">Date d'application : </label>
+        <input type="date" id="historique" required />
+        
+        <h3>Photos *</h3>
+        <div id="photosContainer">
+          <div class="photoGroup">
+            <label>Ajouter des photos : </label>
+            <input type="file" class="photoInput" accept="image/*" multiple required />
+            <label>Catégorie : </label>
+            <select class="photoCategory" required>
+              <option value="infosCommandes">Infos commandes</option>
+              <option value="photos">Photos</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" id="addPhotoGroup">Ajouter un groupe de photos</button>
+        
+        <h3>Signature *</h3>
+
+        <label for="signataireNom">Nom du signataire : *</label>
+        <input type="text" id="signataireNom" placeholder="Nom du signataire" required />
+
+        <div class="signature-container">
+          <label>Signature :</label>
+          <canvas id="signatureCanvas" width="300" height="100" style="border:1px solid black;"></canvas>
+          <button type="button" id="clearSignature">Effacer</button>
+        </div>
+
+        <button type="button" id="generatePDF">Générer PDF</button>        
+      </form>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
