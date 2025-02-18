@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulaire de Saisie - Bon d'Intervention</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Saisie d'un bon d'intervention</h1>
+    </header>
+
+    <main>
+      <form id="form-cr">
+        <label for="date">Date :</label>
+        <input type="date" id="date" required />
+
+        <label for="chantier">Nom du Chantier :</label>
+        <input type="text" id="chantier" required />
+
+        <label for="centrale">Nom de la Centrale :</label>
+        <input type="text" id="centrale" required />
+
+        <label for="entreprise">Nom de l'Entreprise :</label>
+        <input type="text" id="entreprise" required />
+
+        <label for="lieu">Lieu d'intervention / matériel concerné :</label>
+        <input type="text" id="lieu" required />
+
+        <label for="description">Description des Travaux Effectués :</label>
+        <textarea id="description" rows="4" required></textarea>
+
+        <h3>Désignations des Pièces Fournies</h3>
+        <table id="pieces-table">
+          <thead>
+            <tr>
+              <th>Fabricant</th>
+              <th>Désignation</th>
+              <th>Quantité</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="text" name="fabricant[]" /></td>
+              <td><input type="text" name="designation[]" /></td>
+              <td><input type="number" name="quantite[]" min="0" /></td>
+              <td>
+                <button type="button" class="remove-piece">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" id="add-piece">Ajouter une pièce</button>
+
+        <h3>Temps d'Intervention</h3>
+        <table id="intervention-table">
+          <thead>
+            <tr>
+              <th>Nom du Technicien</th>
+              <th>Date d'Intervention</th>
+              <th>Nombre d'Heures</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <input
+                  type="text"
+                  name="techniciens[]"
+                  placeholder="Nom du technicien"
+                />
+              </td>
+              <td><input type="date" name="date_intervention[]" /></td>
+              <td>
+                <input
+                  type="number"
+                  name="nbr_heures[]"
+                  min="0"
+                  placeholder="Heures"
+                />
+              </td>
+              <td>
+                <button type="button" class="remove-technicien">
+                  Supprimer
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" id="add-technician">Ajouter un technicien</button>
+
+        <label for="photos">Photos de l'intervention :</label>
+        <input
+          type="file"
+          id="photos"
+          class="photo-upload"
+          accept="image/*"
+          multiple
+        />
+        <div id="photo-preview"></div>
+
+        <!-- Nouveau bouton pour prendre une photo en direct -->
+        <button type="button" id="take-photo">Prendre une photo</button>
+        <video id="camera" width="300" height="200" autoplay style="display: none; border: 1px solid black;"></video>
+        <canvas id="camera-canvas" width="300" height="200" style="display: none;"></canvas>
+        <button type="button" id="save-photo" style="display: none;">Enregistrer la photo</button>
+
+        <h3>Signatures</h3>
+        <div class="signature-group">
+          <label for="representant">Nom de l'Entreprise :</label>
+          <input type="text" id="representant" required />
+          <div>
+            <h4>Signature du Représentant de l'Entreprise</h4>
+            <canvas
+              id="signature-representant-canvas"
+              width="300"
+              height="150"
+              style="border: 1px solid #000"
+            ></canvas>
+            <button type="button" id="clear-representant">Effacer</button>
+          </div>
+        </div>
+
+        <div class="signature-group">
+          <label for="agent">Nom pour EDF :</label>
+          <input type="text" id="agent" required />
+          <div>
+            <h4>Signature de l'Agent EDF</h4>
+            <canvas
+              id="signature-agent-canvas"
+              width="300"
+              height="150"
+              style="border: 1px solid #000"
+            ></canvas>
+            <button type="button" id="clear-agent">Effacer</button>
+          </div>
+        </div>
+
+        <button type="submit">Générer le PDF</button>
+      </form>
+    </main>
+
+    <footer>
+      <p>EDF SEI - Bon d'Intervention</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
