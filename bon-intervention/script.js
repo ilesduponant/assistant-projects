@@ -258,7 +258,7 @@ async function genererPDF(data) {
 				
     loadLogo(function (logoBase64) {
         if (logoBase64) {
-            pdf.addImage(logoBase64, "PNG", 10, 0, 50, 30);
+            pdf.addImage(logoBase64, "PNG", 10, 0, 25, 15);
         } else {
             console.warn("Le logo EDF ne sera pas ajouté au PDF.");
         }
