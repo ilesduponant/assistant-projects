@@ -267,7 +267,7 @@ async function genererPDF(data) {
 		pdf.setFontSize(20);    
 		pdf.setTextColor(0, 51, 102);
 		
-		let y = 15;
+		let y = 30;
 		pdf.text("BON D'INTERVENTION", 200, y, { align: "right" });
 		y+=10;
 		
