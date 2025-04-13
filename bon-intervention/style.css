@@ -75,8 +75,59 @@ button:hover {
   background-color: #0056b3;
 }
 
+.remove-row {
+  color: #ff5555;           /* Couleur du contenu */
+  font-size: 24px;      	/* Taille du texte ou de l'icône */
+  border: none;
+  background-color: white; 	/* Couleur de fond */
+  border-radius: 4px;   
+  cursor: pointer;
+  margin-top: -10px; 		/* Ajustez la valeur selon vos besoins */
+  width: 32px; 				/* Réduit la largeur */
+  height: 32px; 			/* Réduit la hauteur */
+  display: flex; 			/* Assure un centrage de l'icône */
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-row:hover {
+  color: white;
+  background-color: #ff5555;
+}
+
+.remove-sign {
+  background-color: #ff5555;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.remove-sign:hover {
+  color: white;
+  background-color: #ff0000;
+}
+
 footer {
   text-align: center;
   margin-top: 20px;
   font-size: 0.9em;
+}
+img {
+  max-width:100%;
+  height:auto;
+}
+
+hr {
+	border: none;          /* Enlève les bordures par défaut */
+	height: 3px;           /* Définit la hauteur de la ligne */
+	background-color: #007bff; /* Définit la couleur de la ligne */
+	width: 100%;            /* Définit la largeur de la ligne */
+	margin: 20px auto;     /* Ajoute un espacement autour de la ligne */
+}
+
+/* Style pour le champ "Entreprise intervenante" */
+#txtMajuscule {
+    text-transform: uppercase; /* Transforme le texte en majuscules */
 }
