@@ -41,14 +41,13 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     // Gestion des intervenants
-	
 	manageDynamicTable(
 		"add-technician",
 		"#intervention-table tbody",
 		`
-			<td><input type="text" name="techniciens[]" placeholder="Nom du technicien" oninput="this.value = this.value.toUpperCase()" /></td>
-			<td><input type="date" name="date_intervention[]" /></td>
-			<td><input type="number" name="nbr_heures[]" min="1" placeholder="Nombre d'Heures" /></td>
+			<td><input type="text" name="techniciens[]" placeholder="Nom du technicien" oninput="this.value = this.value.toUpperCase()" required /></td>
+			<td><input type="date" name="date_intervention[]" required /></td>
+			<td><input type="number" name="nbr_heures[]" min="1" placeholder="Nombre d'Heures" required /></td>
 			<td><button type="button" class="remove-row"><i class="fas fa-trash" style="pointer-events: none;"></i></button></td>
 		`
 	);
@@ -193,6 +192,9 @@ document.addEventListener("DOMContentLoaded", () => {
 			console.log("row input = " + row.querySelectorAll("input").value);
             return Array.from(row.querySelectorAll("input")).map(input => {
 				if (input.type === "date") {
+					if (!input.value) {
+						return ""; // Si aucune date n'est renseignée, retourne une chaîne vide
+					}
                 // Reformate la date en JJ/MM/AAAA
                 const [year, month, day] = input.value.split("-"); // Sépare la date ISO
                 const formattedDate = `${day}/${month}/${year}`; // Reformate
@@ -243,7 +245,7 @@ function drawHeader(pdf, x, y, width, height, headerText) {
     pdf.setFontSize(12); // Taille de la police
     
     // Centrer le texte horizontalement et ajuster verticalement
-    const textY = y + height / 2 + 2; // Ajustement vertical
+    const textY = y + height / 2 + 1.5 ; // Ajustement vertical
     pdf.text(headerText, x + width / 2, textY, { align: "center" });
 
     // Retourner la nouvelle position Y (après le bandeau)
@@ -262,24 +264,24 @@ async function genererPDF(data) {
         }
 		// Styles communs
 		pdf.setFont("helvetica", "bold");
-		pdf.setFontSize(15);    
+		pdf.setFontSize(20);    
 		pdf.setTextColor(0, 51, 102);
 		
-		let y = 30;
-		pdf.text("BON D'INTERVENTION", 105, y, { align: "center" });
+		let y = 15;
+		pdf.text("BON D'INTERVENTION", 200, y, { align: "right" });
 		y+=10;
 		
 		// Paramètres du bandeau
 		const x = 10;  // Position X du coin supérieur gauche
 		const width = 190;  // Largeur du bandeau
-		const height = 10;  // Hauteur du bandeau
+		const height = 8;  // Hauteur du bandeau
 		
 	//Pavé Informations principales
 		// Dessine le bandeau Informations principales
 		y = drawHeader(pdf,x,y,width,height,"Informations principales");
 		
 		// Dessiner le cadre principal		
-		const heightInfos = 35; // Hauteur du bloc Infos (data, nom du chantier,...)
+		const heightInfos = 35; // Hauteur du bloc Infos (date, nom du chantier,...)
 					
 		pdf.setDrawColor(0, 51, 102);
 		pdf.roundedRect(x, y, width, heightInfos,1,1, "FD");
@@ -344,12 +346,12 @@ async function genererPDF(data) {
 		const widthLieu = pdf.getTextWidth(monLieu); 
 		pdf.setFont("helvetica", "normal"); // Police normale
 		pdf.text(`${data.lieu}`, 12 + widthLieu, y); // Ajustement basé sur la largeur
-		y += 12;
+		y += 10;
 	
 	// Pavé Description des travaux
 		// Dessine le bandeau pour la liste des pièces fournies
 		y = drawHeader(pdf, x, y, width, height, "Description des travaux");        
-		const descLines = pdf.splitTextToSize(data.description, 202); // Récupère les lignes de la description
+		const descLines = pdf.splitTextToSize(data.description, 198); // Récupère les lignes de la description
 
 		// Initialisation des propriétés
 		pdf.setDrawColor(0, 51, 102);
@@ -367,7 +369,7 @@ async function genererPDF(data) {
 
 		// Parcourt toutes les lignes de la description des travaux
 		descLines.forEach((line, index) => {
-			if (y + lineSpacing > pageHeight - 10) {
+			if (y + lineSpacing > pageHeight - 15) {
 				// Si le texte dépasse la hauteur disponible, dessiner le cadre pour la page courante
 				const rectHeight = y - startY + rectPadding; // Hauteur du rectangle pour cette page
 				pdf.roundedRect(x, startY, width, rectHeight, 1, 1, "D"); // Dessiner le cadre arrondi
@@ -387,7 +389,7 @@ async function genererPDF(data) {
 		// Dessiner le cadre final pour les dernières lignes
 		const finalRectHeight = y - startY + rectPadding; // Hauteur du rectangle final
 		pdf.roundedRect(x, startY, width, finalRectHeight, 1, 1, "D"); // Dessiner le dernier cadre
-		y += 5;
+		y += 4.5;
 			
 	//Pavé Liste des pièces fournies	
 		var nombreDePieces = data.pieces.length;
@@ -430,45 +432,48 @@ async function genererPDF(data) {
 					}
 				});
 
-				y = pdf.lastAutoTable.finalY + 5;
+				y = pdf.lastAutoTable.finalY + 6;
 			}
 		}
 		
-	//Pavé Temps d'Intervention	
-		y = drawHeader(pdf,x,y,width,height,"Temps d'intervention");	
-		y += 2;
-       	
-		pdf.autoTable({
-			startY: y, // Position verticale où commence le tableau
-			head: [["Technicien", "Date", "Nombre d'heures"]], // En-têtes du tableau
-			body: data.interventions, // Contenu du tableau
-			tableWidth: 190,
-			margin: { left: 10 },
-			theme: 'grid', // Style du tableau avec bordures
-			styles: {
-				fontSize: 10, // Taille de la police pour le contenu
-				textColor: [0, 51, 102], // Texte bleu
-				lineColor: [0, 51, 102], // Couleur des bordures (rouge en RGB)
-				lineWidth: 0.1, // Épaisseur des bordures
-			},
-			headStyles: {
-				fontSize: 10, // Taille de la police pour l'en-tête
-				fillColor: [255, 102, 0], // Couleur orange vif (RGB : 255, 102, 0)
-				textColor: [255, 255, 255], // Texte blanc dans l'en-tête
-				fontStyle: 'bold', // Police en gras pour l'en-tête
-				halign: 'center', // Alignement centré des titres
-			},
-			alternateRowStyles: {
-				fillColor: [240, 248, 255], // Bleu très clair pour alternance des lignes (RGB : 240, 248, 255)
-			},
-			columnStyles: {
-				0: { halign: 'left' }, // Alignement gauche des textes de la colonne 1 (Technicien)
-				1: { halign: 'center' }, // Alignement centré des textes de la colonne 2 (Date)
-				2: { halign: 'right' }, // Alignement droit des textes de la colonne 3 (Nombre d'heures)
-			}
-		});
-		
-        y = pdf.lastAutoTable.finalY + 10;
+	//Pavé Temps d'Intervention
+				// Filtrer les données pour exclure les lignes avec un technicien non renseigné
+				const filteredInterventions = data.interventions.filter(row => row[0]?.trim() !== "");
+				// Dessine le bandeau pour la liste des pièces fournies	
+				y = drawHeader(pdf,x,y,width,height,"Temps d'intervention");	
+				y += 2;
+				
+				pdf.autoTable({
+					startY: y, // Position verticale où commence le tableau
+					head: [["Technicien", "Date", "Nombre d'heures"]], // En-têtes du tableau
+					body: filteredInterventions, // Contenu du tableau // Utilise les données filtrées
+					tableWidth: 190,
+					margin: { left: 10 },
+					theme: 'grid', // Style du tableau avec bordures
+					styles: {
+						fontSize: 10, // Taille de la police pour le contenu
+						textColor: [0, 51, 102], // Texte bleu
+						lineColor: [0, 51, 102], // Couleur des bordures (rouge en RGB)
+						lineWidth: 0.1, // Épaisseur des bordures
+					},
+					headStyles: {
+						fontSize: 10, // Taille de la police pour l'en-tête
+						fillColor: [255, 102, 0], // Couleur orange vif (RGB : 255, 102, 0)
+						textColor: [255, 255, 255], // Texte blanc dans l'en-tête
+						fontStyle: 'bold', // Police en gras pour l'en-tête
+						halign: 'center', // Alignement centré des titres
+					},
+					alternateRowStyles: {
+						fillColor: [240, 248, 255], // Bleu très clair pour alternance des lignes (RGB : 240, 248, 255)
+					},
+					columnStyles: {
+						0: { halign: 'left' }, // Alignement gauche des textes de la colonne 1 (Technicien)
+						1: { halign: 'center' }, // Alignement centré des textes de la colonne 2 (Date)
+						2: { halign: 'right' }, // Alignement droit des textes de la colonne 3 (Nombre d'heures)
+					}
+				});
+				
+				y = pdf.lastAutoTable.finalY + 6;
 		
 		//Ajout de la fonction signature				
 		addSignatures(pdf, data.entreprise, data.representantNom, data.agentNom, data.signatures, y);
@@ -546,7 +551,10 @@ async function genererPDF(data) {
 
 							pdf.addPage(); // Ajouter une page au PDF
 							pdf.addImage(compressedImage, "JPEG", paddingWidth, paddingHeight, newWidth, newHeight); // Ajouter l'image
-							pdf.text(photo.label || "Sans libellé", 105, paddingHeight + 20 + newHeight, { align: "center" }); // Ajouter un texte
+							pdf.setFont("helvetica", "bold");
+							pdf.setFontSize(12);
+							pdf.setTextColor(0, 51, 102); // Texte bleu EDF
+							pdf.text(photo.label || "Sans libellé", 105, paddingHeight + 10 + newHeight, { align: "center" }); // Ajouter un texte
 
 							console.log("Image ajoutée au PDF avec succès !");
 							resolve(); // Résoudre la promesse après ajout
@@ -568,7 +576,7 @@ async function genererPDF(data) {
 				console.log("Toutes les images ont été ajoutées, sauvegarde en cours...");
 
 				// Sauvegarde le PDF une fois que toutes les promesses sont résolues
-				addPageNumbers(pdf); // Ajouter la numérotation
+				addFootPage(pdf); // Ajouter l'en-tête et pied de page
 				pdf.save("bon_intervention.pdf"); 
 				console.log("PDF sauvegardé avec succès.");
 			})
@@ -587,15 +595,14 @@ function addSignatures(pdf, entreprise, representantNom, agentNom, signatures, s
     let y = startY; // Position de départ
     const x = 10; // Position X pour les rectangles
     const width = 190; // Largeur du bandeau "Signatures"
-    const headerHeight = 10; // Hauteur du bandeau "Signatures"
+    const headerHeight = 8; // Hauteur du bandeau "Signatures"
     const rectWidth = 90; // Largeur des rectangles pour les signatures
     const rectHeight = 44; // Nouvelle hauteur réduite des rectangles
     const padding = 5; // Espace intérieur dans les rectangles
-
     const pageHeight = pdf.internal.pageSize.getHeight();
 
     // Vérifier si un saut de page est nécessaire
-    if (pageHeight - y < rectHeight + 56) {
+    if (pageHeight - y - 16 < headerHeight + rectHeight + 5 ) {
         pdf.addPage();
         y = 20; // Réinitialisation de la position verticale après le saut de page
     }
@@ -606,7 +613,7 @@ function addSignatures(pdf, entreprise, representantNom, agentNom, signatures, s
 
     // Style des bordures et couleurs
     pdf.setDrawColor(0, 51, 102); // Bordures bleu EDF
-    pdf.setTextColor(0, 0, 0); // Texte noir
+    pdf.setTextColor(0, 51, 102); // Texte bleu EDF
     pdf.setLineWidth(0.3); // Bordure fine
 
     // Texte pour l'Entreprise
@@ -707,8 +714,8 @@ function addSignatures(pdf, entreprise, representantNom, agentNom, signatures, s
     }
 });
 
-// Fonction pour Ajouter la numérotation des pages
-function addPageNumbers(pdf) {
+// Fonction pour Ajouter En-tête et pieds de page avec la numérotation des pages
+function addFootPage(pdf) {
     const pageCount = pdf.internal.getNumberOfPages(); // Nombre total de pages
     const pageWidth = pdf.internal.pageSize.getWidth(); // Largeur de la page
     const pageHeight = pdf.internal.pageSize.getHeight(); // Hauteur de la page
@@ -716,12 +723,21 @@ function addPageNumbers(pdf) {
     // Parcours toutes les pages
     for (let i = 1; i <= pageCount; i++) {
         pdf.setPage(i); // Passe à la page actuelle
-        pdf.setFont("helvetica", "normal");
+        pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10);
         pdf.setTextColor(0, 51, 102); // Texte bleu foncé
         const pageNumberText = `${i} / ${pageCount}`;
-        pdf.text(pageNumberText, 200, pageHeight - 10, { align: "right" }); // Position en bas à droite
+        //Pieds de page
+		pdf.text(pageNumberText, 200, pageHeight - 10, { align: "right" }); // Position en bas à droite
 		pdf.text("EDF-SEI-IDP", 10, pageHeight - 10); // Position en bas à droite
+		
+		// Vérifie si la page est supérieure ou égale à 2
+        if (i >= 2) {
+			pdf.setFont("helvetica", "bold"); // Police en gras
+            pdf.setFontSize(20); // Taille de police pour "BON D'INTERVENTION"
+            //En-tête à partir de la page 2
+			pdf.text("BON D'INTERVENTION", 200, 15, { align: "right" }); // Position en haut à droite
+        }
     }
 }
 
