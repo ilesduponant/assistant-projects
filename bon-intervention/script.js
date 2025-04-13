@@ -258,7 +258,7 @@ async function genererPDF(data) {
 				
     loadLogo(function (logoBase64) {
         if (logoBase64) {
-            pdf.addImage(logoBase64, "PNG", 10, 0, 1579/50, 673/50);
+            pdf.addImage(logoBase64, "PNG", 10, 5, 1579/50, 673/50);
         } else {
             console.warn("Le logo EDF ne sera pas ajouté au PDF.");
         }
@@ -267,7 +267,7 @@ async function genererPDF(data) {
 		pdf.setFontSize(20);    
 		pdf.setTextColor(0, 51, 102);
 		
-		let y = 30;
+		let y = 15;
 		pdf.text("BON D'INTERVENTION", 200, y, { align: "right" });
 		y+=10;
 		
