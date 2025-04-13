@@ -73,15 +73,15 @@
           <thead>
             <tr>
               <th>Nom du Technicien *</th>
-              <th>Date d'Intervention</th>
-              <th>Nombre d'Heures</th>
+              <th>Date d'Intervention *</th>
+              <th>Nombre d'Heures *</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><input type="text" name="techniciens[]" placeholder="Nom du Technicien" oninput="this.value = this.value.toUpperCase()" required /></td>
-			  <td><input type="date" name="date_intervention[]" /></td>
-              <td><input type="number" name="nbr_heures[]" min="0" placeholder="Nombre d'Heures" /></td>
+			  <td><input type="date" name="date_intervention[]" required /></td>
+              <td><input type="number" name="nbr_heures[]" min="0" placeholder="Nombre d'Heures" required /></td>
             </tr>
           </tbody>
         </table>
