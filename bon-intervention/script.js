@@ -269,10 +269,10 @@ async function genererPDF(data) {
 		
 		// Styles communs
 		pdf.setFont("helvetica", "bold");
-		pdf.setFontSize(20);    
+		pdf.setFontSize(25);    
 		pdf.setTextColor(0, 51, 102);
 		
-		let y = 20;
+		let y = 22;
 		pdf.text("BON D'INTERVENTION", 200, y, { align: "right" });
 		y+=15;
 		
