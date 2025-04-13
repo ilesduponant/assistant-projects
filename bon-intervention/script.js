@@ -616,7 +616,7 @@ function addSignatures(pdf, entreprise, representantNom, agentNom, signatures, s
     pdf.text(texteEntreprise, x, y); // Texte au-dessus du rectangle
 	const widthtexteEntreprise = pdf.getTextWidth(texteEntreprise); // Calcul de la largeur du texte
 	pdf.setFont("helvetica", "normal"); // Police normale
-	pdf.text(representantNom, x + widthtexteEntreprise, y); // Ajustement basé sur la largeur
+	pdf.text(representantNom.toUpperCase(), x + widthtexteEntreprise, y); // Ajustement basé sur la largeur
 
     // Bloc pour l'Entreprise
     const rectY = y + 2; // Position du rectangle sous le texte
@@ -633,7 +633,7 @@ function addSignatures(pdf, entreprise, representantNom, agentNom, signatures, s
     pdf.text(texteEDF, xAgent, y); // Texte au-dessus du rectangle
 	const widthtexteEDF = pdf.getTextWidth(texteEDF); // Calcul de la largeur du texte
 	pdf.setFont("helvetica", "normal"); // Police normale
-	pdf.text(agentNom, xAgent + widthtexteEDF, y);
+	pdf.text(agentNom.toUpperCase(), xAgent + widthtexteEDF, y);
 
     // Bloc pour EDF
     pdf.setFillColor(240, 248, 255); // Remplissage bleu clair
