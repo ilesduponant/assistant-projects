@@ -234,8 +234,8 @@ function sleep(ms) {
 function drawHeader(pdf, x, y, width, height, headerText) {
     // Dessiner un rectangle avec coins arrondis
     const radius = 1; // Rayon des coins
-    pdf.setFillColor(0, 51, 102); // Couleur bleu
-    pdf.setDrawColor(0, 51, 102); // Couleur bleu
+    pdf.setFillColor(0, 83, 159); // Couleur bleu
+    pdf.setDrawColor(0, 83, 159); // Couleur bleu
     
     pdf.roundedRect(x, y, width, height, radius, radius, "FD"); // Rectangle avec coins arrondis
     
@@ -263,14 +263,14 @@ async function genererPDF(data) {
             console.warn("Le logo EDF ne sera pas ajouté au PDF.");
         }
 		
-		/*pdf.setFillColor(0, 51, 102); // Couleur bleu
-		pdf.setDrawColor(0, 51, 102); // Couleur bleu
+		/*pdf.setFillColor(0, 83, 159); // Couleur bleu
+		pdf.setDrawColor(0, 83, 159); // Couleur bleu
 		pdf.roundedRect(10, 10, 1579/40, 673/40, 1, 1, "FD");*/
 		
 		// Styles communs
 		pdf.setFont("helvetica", "bold");
 		pdf.setFontSize(25);    
-		pdf.setTextColor(0, 51, 102);
+		pdf.setTextColor(0, 83, 159);
 		
 		let y = 22;
 		pdf.text("BON D'INTERVENTION", 200, y, { align: "right" });
@@ -288,7 +288,7 @@ async function genererPDF(data) {
 		// Dessiner le cadre principal		
 		const heightInfos = 35; // Hauteur du bloc Infos (date, nom du chantier,...)
 					
-		pdf.setDrawColor(0, 51, 102);
+		pdf.setDrawColor(0, 83, 159);
 		pdf.roundedRect(x, y, width, heightInfos,1,1, "FD");
 		// Espace après le rectangle
 		y += 5;
@@ -297,7 +297,7 @@ async function genererPDF(data) {
 		const textMargin = 2; // Marge interne
 		y += textMargin; // Ajustement pour placer le texte dans le rectangle
 		pdf.setFontSize(12); // Taille de la police
-		pdf.setTextColor(0, 51, 102); // Texte bleu
+		pdf.setTextColor(0, 83, 159); // Texte bleu
 		
 		// Fonction pour formater la date
 		function formatDate(date) {
@@ -359,9 +359,9 @@ async function genererPDF(data) {
 		const descLines = pdf.splitTextToSize(data.description, 198); // Récupère les lignes de la description
 
 		// Initialisation des propriétés
-		pdf.setDrawColor(0, 51, 102);
+		pdf.setDrawColor(0, 83, 159); // bleu EDF
 		pdf.setFillColor(255, 255, 255); // Définit une couleur de remplissage blanche
-		pdf.setTextColor(0, 51, 102);
+		pdf.setTextColor(0, 83, 159); // bleu EDF
 		pdf.setFont("helvetica", "normal"); // Police normale
 
 		// Dimensions du cadre et espacement
@@ -416,8 +416,8 @@ async function genererPDF(data) {
 					theme: 'grid', // Style du tableau avec bordures
 					styles: {
 						fontSize: 10, // Taille de la police pour le contenu
-						textColor: [0, 51, 102], // Texte bleu
-						lineColor: [0, 51, 102], // Couleur des bordures (rouge en RGB)
+						textColor: [0, 83, 159], // Texte bleu
+						lineColor: [0, 83, 159], // Couleur des bordures (rouge en RGB)
 						lineWidth: 0.1, // Épaisseur des bordures
 					},
 					headStyles: {
@@ -457,8 +457,8 @@ async function genererPDF(data) {
 					theme: 'grid', // Style du tableau avec bordures
 					styles: {
 						fontSize: 10, // Taille de la police pour le contenu
-						textColor: [0, 51, 102], // Texte bleu
-						lineColor: [0, 51, 102], // Couleur des bordures (rouge en RGB)
+						textColor: [0, 83, 159], // Texte bleu
+						lineColor: [0, 83, 159], // Couleur des bordures (rouge en RGB)
 						lineWidth: 0.1, // Épaisseur des bordures
 					},
 					headStyles: {
@@ -558,7 +558,7 @@ async function genererPDF(data) {
 							pdf.addImage(compressedImage, "JPEG", paddingWidth, paddingHeight, newWidth, newHeight); // Ajouter l'image
 							pdf.setFont("helvetica", "bold");
 							pdf.setFontSize(12);
-							pdf.setTextColor(0, 51, 102); // Texte bleu EDF
+							pdf.setTextColor(0, 83, 159); // Texte bleu EDF
 							pdf.text(photo.label || "Sans libellé", 105, paddingHeight + 10 + newHeight, { align: "center" }); // Ajouter un texte
 
 							console.log("Image ajoutée au PDF avec succès !");
@@ -617,8 +617,8 @@ function addSignatures(pdf, entreprise, representantNom, agentNom, signatures, s
     y += 5;
 
     // Style des bordures et couleurs
-    pdf.setDrawColor(0, 51, 102); // Bordures bleu EDF
-    pdf.setTextColor(0, 51, 102); // Texte bleu EDF
+    pdf.setDrawColor(0, 83, 159); // Bordures bleu EDF
+    pdf.setTextColor(0, 83, 159); // Texte bleu EDF
     pdf.setLineWidth(0.3); // Bordure fine
 
     // Texte pour l'Entreprise
@@ -730,7 +730,7 @@ function addFootPage(pdf) {
         pdf.setPage(i); // Passe à la page actuelle
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10);
-        pdf.setTextColor(0, 51, 102); // Texte bleu foncé
+        pdf.setTextColor(0, 83, 159); // Texte bleu foncé
         const pageNumberText = `${i} / ${pageCount}`;
         //Pieds de page
 		pdf.text(pageNumberText, 200, pageHeight - 10, { align: "right" }); // Position en bas à droite
