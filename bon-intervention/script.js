@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		"add-technician",
 		"#intervention-table tbody",
 		`
-			<td><input type="text" name="techniciens[]" placeholder="Nom du technicien" oninput="this.value = this.value.toUpperCase()"/></td>
+			<td><input type="text" name="techniciens[]" placeholder="Nom du technicien" oninput="this.value = this.value.toUpperCase()" /></td>
 			<td><input type="date" name="date_intervention[]" /></td>
 			<td><input type="number" name="nbr_heures[]" min="1" placeholder="Nombre d'Heures" /></td>
 			<td><button type="button" class="remove-row"><i class="fas fa-trash" style="pointer-events: none;"></i></button></td>
