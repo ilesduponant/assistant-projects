@@ -79,7 +79,7 @@
           </thead>
           <tbody>
             <tr>
-              <td><input type="text" name="techniciens[]" placeholder="Nom du Technicien" style="text-transform: uppercase;" required /></td>
+              <td><input type="text" name="techniciens[]" placeholder="Nom du Technicien" oninput="this.value = this.value.toUpperCase()" required /></td>
 			  <td><input type="date" name="date_intervention[]" /></td>
               <td><input type="number" name="nbr_heures[]" min="0" placeholder="Nombre d'Heures" /></td>
             </tr>
