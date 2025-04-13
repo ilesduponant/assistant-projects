@@ -258,18 +258,23 @@ async function genererPDF(data) {
 				
     loadLogo(function (logoBase64) {
         if (logoBase64) {
-            pdf.addImage(logoBase64, "PNG", 10, 5, 1579/50, 673/50);
+            pdf.addImage(logoBase64, "PNG", 10, 10, 1579/40, 673/40);
         } else {
             console.warn("Le logo EDF ne sera pas ajouté au PDF.");
         }
+		
+		/*pdf.setFillColor(0, 51, 102); // Couleur bleu
+		pdf.setDrawColor(0, 51, 102); // Couleur bleu
+		pdf.roundedRect(10, 10, 1579/40, 673/40, 1, 1, "FD");*/
+		
 		// Styles communs
 		pdf.setFont("helvetica", "bold");
 		pdf.setFontSize(20);    
 		pdf.setTextColor(0, 51, 102);
 		
-		let y = 15;
+		let y = 20;
 		pdf.text("BON D'INTERVENTION", 200, y, { align: "right" });
-		y+=10;
+		y+=15;
 		
 		// Paramètres du bandeau
 		const x = 10;  // Position X du coin supérieur gauche
