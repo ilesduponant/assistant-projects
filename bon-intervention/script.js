@@ -27,13 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				}
 			});
     }
-	// Date automatiqument selectionnée par un clique sur la date
-	document.querySelector('.date-selector').addEventListener('change', function() {
-		// Validez ou appliquez la date directement
-		console.log('Date sélectionnée automatiquement :', this.value);
-		// Code pour simuler la définition de la date
-	});
-
+	
     // Gestion des pièces fournies
     manageDynamicTable(
         "add-piece",
