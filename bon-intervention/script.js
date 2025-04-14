@@ -27,6 +27,12 @@ document.addEventListener("DOMContentLoaded", () => {
 				}
 			});
     }
+	// Date automatiqument selectionnée par un clique sur la date
+	document.querySelector('.date-selector').addEventListener('change', function() {
+		// Validez ou appliquez la date directement
+		console.log('Date sélectionnée automatiquement :', this.value);
+		// Code pour simuler la définition de la date
+	});
 
     // Gestion des pièces fournies
     manageDynamicTable(
@@ -167,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
             chantier: document.getElementById("chantier").value,
             centrale: document.getElementById("centrale").value,
             entreprise: document.getElementById("entreprise").value,
-            lieu: document.getElementById("lieu").value,
+            local: document.getElementById("local").value,
             description: document.getElementById("description").value,
             representantNom: document.getElementById("representant").value,
             agentNom: document.getElementById("agent").value,
@@ -175,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
             interventions: collectTableData("#intervention-table tbody"),
             photos: photoList.map((photo) => ({
                 data: photo.data,
-                label: photo.label.value || "Sans libellé"
+                label: photo.label.value || ""
             })), // Photos avec libellés
             signatures: {
                 representant: canvasRepresentant.toDataURL("image/png"),
@@ -345,12 +351,12 @@ async function genererPDF(data) {
 		y += 8;
 		
 		pdf.setFont("helvetica", "bold"); // Police en gras
-		const monLieu = "Lieu d'Intervention / Matériel concerné : ";
-		pdf.text(monLieu, 12, y);
+		const monLocal = "Local / Matériel concerné : ";
+		pdf.text(monLocal, 12, y);
 		// Calcul de la largeur du texte
-		const widthLieu = pdf.getTextWidth(monLieu); 
+		const widthLocal = pdf.getTextWidth(monLocal); 
 		pdf.setFont("helvetica", "normal"); // Police normale
-		pdf.text(`${data.lieu}`, 12 + widthLieu, y); // Ajustement basé sur la largeur
+		pdf.text(`${data.local}`, 12 + widthLocal, y); // Ajustement basé sur la largeur
 		y += 10;
 	
 	// Pavé Description des travaux
@@ -559,7 +565,7 @@ async function genererPDF(data) {
 							pdf.setFont("helvetica", "bold");
 							pdf.setFontSize(12);
 							pdf.setTextColor(16, 54, 122); // Texte bleu EDF
-							pdf.text(photo.label || "Sans libellé", 105, paddingHeight + 10 + newHeight, { align: "center" }); // Ajouter un texte
+							pdf.text(photo.label || "", 105, paddingHeight + 10 + newHeight, { align: "center" }); // Ajouter un texte
 
 							console.log("Image ajoutée au PDF avec succès !");
 							resolve(); // Résoudre la promesse après ajout

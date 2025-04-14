@@ -19,7 +19,7 @@
       <form id="form-cr">
 		<h3>Informations Générales</h3>
         <label for="date">Date *</label>
-        <input type="date" id="date" required />
+        <input type="date" class="date-selector" id="date" required />
 
         <label for="chantier">Nom du Chantier *</label>
         <input type="text" id="chantier" required />
@@ -37,9 +37,8 @@
         <label for="entreprise">Entreprise intervenante *</label>
         <input type="text" id="entreprise" oninput="this.value = this.value.toUpperCase()" required />
 		
-
-        <label for="lieu">Lieu d'intervention / matériel concerné *</label>
-        <input type="text" id="lieu" required />
+        <label for="local">Local / Matériel concerné *</label>
+        <input type="text" id="local" required />
 
         <label for="description">Description des Travaux Effectués *</label>
         <textarea id="description" rows="4" required></textarea>
