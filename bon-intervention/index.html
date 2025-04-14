@@ -19,7 +19,15 @@
       <form id="form-cr">
 		<h3>Informations Générales</h3>
         <label for="date">Date *</label>
-        <input type="date" id="date" required />
+        <input type="date" class="date-selector" id="date" required />
+
+	<script>
+		document.querySelector('.date-selector').addEventListener('change', function() {
+		    // Validez ou appliquez la date directement
+		    console.log('Date sélectionnée automatiquement :', this.value);
+		    alert('La date sélectionnée est : ' + this.value);
+		});
+	</script>
 
         <label for="chantier">Nom du Chantier *</label>
         <input type="text" id="chantier" required />
