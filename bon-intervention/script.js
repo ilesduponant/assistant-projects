@@ -275,7 +275,7 @@ function drawHeader(pdf, x, y, width, height, headerText) {
 async function genererPDF(data) {
     
 	const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF();
+    const pdf = new jsPDF({compress: true});
 	
 	if (!hasSignature) {
 		event.preventDefault(); // Empêche toute action par défaut, si nécessaire
