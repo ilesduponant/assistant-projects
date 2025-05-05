@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Formulaire de Saisie - Bon d'Intervention</title>
+    <title>Bon d'Intervention</title>
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -17,6 +17,7 @@
 
     <main>
       <form id="form-cr">
+		<hr>
 		<h3>Informations Générales</h3>
         <label for="date">Date *</label>
         <input type="date" id="date" required />
@@ -85,6 +86,7 @@
           </tbody>
         </table>
         <button type="button" id="add-technician">Ajouter un technicien</button>
+		
 		<hr>
         <h3 for="photos">Photos de l'intervention</h3>
         <div id="photo-preview"></div>
@@ -97,25 +99,25 @@
         />
 
         <!-- Nouveau bouton pour prendre une photo en direct -->
-        <button type="button" id="take-photo">Prendre une photo</button>
-        <video id="camera" width="300" height="200" autoplay style="display: none; border: 1px solid black;"></video>
-        <canvas id="camera-canvas" width="300" height="200" style="display: none;"></canvas>
-        <button type="button" id="save-photo" style="display: none;">Enregistrer la photo</button>
+        <button type="button" id="take-photo">Prendre une photo </i></button>
+		<video id="camera" autoplay></video>
+		<canvas id="camera-canvas" style="display: none;"></canvas>
+		<!-- Bouton capture photo -->
+		<div style="text-align: center; margin-top: 10px;">
+			<button type="button" id="save-photo" style="display: none;" class="capture-button">
+				<i class="fas fa-camera"></i>
+				<!--<div class="inner-circle"></div>-->
+			</button>
+		</div>
+		
 		<hr>
         <h3>Signatures</h3>
         <div class="signature-group">
           <label for="representant">Représentant de l'Entreprise * :</label>
-
           <input type="text" id="representant" placeholder="Nom Prénom" style="text-transform: uppercase;" required />
           <div>
             <h4>Signature du Représentant de l'Entreprise</h4>
-
-            <canvas
-              id="signature-representant-canvas"
-              width="300"
-              height="150"
-              style="border: 1px solid #000"
-            ></canvas>
+            <canvas id="signature-representant-canvas" ></canvas>
             <button type="button" id="clear-representant" class="remove-sign" >Effacer</button>
           </div>
         </div>
@@ -125,17 +127,12 @@
           <input type="text" id="agent" placeholder="Nom Prénom" style="text-transform: uppercase;" required />
           <div>
             <h4>Signature du Représentant EDF</h4>
-            <canvas
-              id="signature-agent-canvas"
-              width="300"
-              height="150"
-              style="border: 1px solid #000"
-            ></canvas>
+            <canvas id="signature-agent-canvas" ></canvas>
             <button type="button" id="clear-agent" class="remove-sign" >Effacer</button>
           </div>
         </div>
 
-        <button type="submit">Générer le PDF</button>
+        <button type="submit" id="generatePDF">Générer le PDF</button>
       </form>
     </main>
 

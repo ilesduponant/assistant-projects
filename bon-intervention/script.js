@@ -2,7 +2,10 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("form-cr");
+	const generatePDFBtn = document.getElementById("generatePDF");
 
+	let hasSignature = false;
+	
     // Initialisation des canvases pour les signatures
     const canvasRepresentant = setupSignatureCanvas("signature-representant-canvas", "clear-representant");
     const canvasAgent = setupSignatureCanvas("signature-agent-canvas", "clear-agent");
@@ -133,24 +136,12 @@ document.addEventListener("DOMContentLoaded", () => {
         labelInput.style.marginTop = "5px";
         photoContainer.appendChild(labelInput);
 
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = "Supprimer";
-        deleteButton.style.position = "absolute";
-        deleteButton.style.top = "15px";
-        deleteButton.style.right = "5px";
-        deleteButton.style.backgroundColor = "#ff5555";
-        deleteButton.style.color = "#fff";
-        deleteButton.style.border = "none";
-        deleteButton.style.cursor = "pointer";
-        deleteButton.style.padding = "5px";
-        deleteButton.style.fontSize = "12px";
-		deleteButton.addEventListener("mouseover", () => {deleteButton.style.backgroundColor = "#ff0000"; // Rouge vif au survol
-        });
-		deleteButton.addEventListener("mouseout", () => {deleteButton.style.backgroundColor = "#ff5555"; // Retour à la couleur d'origine
-		});
+        // Bouton supprimer photo
+		const deleteButton = document.createElement("button");
+		deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+		deleteButton.className = "delete-button"; // Ajout d'une classe CSS
         deleteButton.addEventListener("click", () => {photoPreviewContainer.removeChild(photoContainer); photoList = photoList.filter((photo) => photo.data !== photoData); // Retirer la photo et son libellé
 		});
-
         photoContainer.appendChild(deleteButton);
         photoPreviewContainer.appendChild(photoContainer);
 
@@ -158,10 +149,29 @@ document.addEventListener("DOMContentLoaded", () => {
         photoList.push({ data: photoData, label: labelInput });
     }
 
-    // Soumission du formulaire et génération du PDF
-    form.addEventListener("submit", async (event) => {
-        event.preventDefault();
+	// Controle que tous les champs obligatoires sont renseignés
+	function validateForm() {
+		let isValid = true;
+		document.querySelectorAll("input[required], textarea[required], select[required]").forEach((input) => {
+			console.log(`Validation du champ : ${input.name}, valeur : ${input.value}`);
+			if (!input.value || (input.type === "file" && input.files.length === 0)) {
+				console.log(`Champ invalide : ${input.name}`);
+				input.style.border = "2px solid red";
+				isValid = false;
+			} else {
+				input.style.border = "";
+			}
+		});
+		console.log(`Statut de validation global : ${isValid}`);
+		return isValid;
+	}
 
+    // Soumission du formulaire et génération du PDF
+    //form.addEventListener("submit", async (event) => {
+	generatePDFBtn.addEventListener("click", async (event) => {
+
+		event.preventDefault();
+				
         const data = {
             date: document.getElementById("date").value,
             chantier: document.getElementById("chantier").value,
@@ -182,7 +192,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 agent: canvasAgent.toDataURL("image/png")
             }
         };
-
+		
+		console.log("Validation déclenchée");
+		if (!validateForm()) {
+		  alert("⚠️ Veuillez remplir tous les champs obligatoires avant de générer le PDF !");
+		  return;
+		}
+		
         await genererPDF(data);
     });
 
@@ -206,31 +222,34 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Charger le logo EDF en Base64 avant de générer le PDF
-function loadLogo(callback) {
-    const logo = new Image();
-    logo.src = "EDF.png"; // Vérifiez que l'image est bien à cet emplacement
-    logo.crossOrigin = "Anonymous"; // Évite les problèmes de CORS
+// Charger le logo EDF en Base64 avant de générer le PDF
+	function loadLogo(callback) {
+		const logo = new Image();
+		logo.src = "EDF.png"; // Vérifiez que l'image est bien à cet emplacement
+		logo.crossOrigin = "Anonymous"; // Évite les problèmes de CORS
 
-    logo.onload = function () {
-        const canvas = document.createElement("canvas");
-        canvas.width = logo.width;
-        canvas.height = logo.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(logo, 0, 0);
-        const logoBase64 = canvas.toDataURL("image/png"); // Convertir en Base64
-        callback(logoBase64);
-    };
+		logo.onload = function () {
+			const canvas = document.createElement("canvas");
+			canvas.width = logo.width;
+			canvas.height = logo.height;
+			const ctx = canvas.getContext("2d");
+			ctx.drawImage(logo, 0, 0);
+			const logoBase64 = canvas.toDataURL("image/png"); // Convertir en Base64
+			callback(logoBase64);
+		};
 
-    logo.onerror = function () {
-        console.error("Erreur lors du chargement du logo EDF");
-        callback(null);
-    };
-}
+		logo.onerror = function () {
+			console.error("Erreur lors du chargement du logo EDF");
+			callback(null);
+		};
+	}
+
+// ???
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Dessine l'entête d'un paragraphe
 function drawHeader(pdf, x, y, width, height, headerText) {
     // Dessiner un rectangle avec coins arrondis
     const radius = 1; // Rayon des coins
@@ -251,10 +270,18 @@ function drawHeader(pdf, x, y, width, height, headerText) {
     // Retourner la nouvelle position Y (après le bandeau)
     return y + height; // Nouvelle position
 }
+
+// Générer un PDF
 async function genererPDF(data) {
-    const { jsPDF } = window.jspdf;
+    
+	const { jsPDF } = window.jspdf;
     const pdf = new jsPDF();
 	
+	if (!hasSignature) {
+		event.preventDefault(); // Empêche toute action par défaut, si nécessaire
+		alert("⚠️ La signature est obligatoire avant de générer le PDF !");
+		return; // Stoppe la fonction ici
+	}
 				
     loadLogo(function (logoBase64) {
         if (logoBase64) {
@@ -356,7 +383,7 @@ async function genererPDF(data) {
 	// Pavé Description des travaux
 		// Dessine le bandeau pour la liste des pièces fournies
 		y = drawHeader(pdf, x, y, width, height, "Description des travaux");        
-		const descLines = pdf.splitTextToSize(data.description, 198); // Récupère les lignes de la description
+		const descLines = pdf.splitTextToSize(data.description, 190); // Récupère les lignes de la description
 
 		// Initialisation des propriétés
 		pdf.setDrawColor(16, 54, 122); // bleu EDF
@@ -580,10 +607,22 @@ async function genererPDF(data) {
 			.then(() => {
 				console.log("Toutes les images ont été ajoutées, sauvegarde en cours...");
 
-				// Sauvegarde le PDF une fois que toutes les promesses sont résolues
+			// Sauvegarde le PDF une fois que toutes les promesses sont résolues
+				// Récupère les champs d'entrée HTML avec des identifiants spécifiques
+				const dateInput = document.getElementById("date"); // Champ pour la date
+				const companyInput = document.getElementById("entreprise"); // Champ pour le nom de l'entreprise
+
+				// Récupére les valeurs des champs
+				const formattedDate = dateInput.value; // La valeur de l'entrée pour la date
+				const companyName = companyInput.value; // La valeur de l'entrée pour l'entreprise
+
+				// Construit le nom du fichier
+				const fileName = `BI_${companyName}_${formattedDate}.pdf`;
+
+				// Sauvegarder le PDF avec le nouveau nom
 				addFootPage(pdf); // Ajouter l'en-tête et pied de page
-				pdf.save("bon_intervention.pdf"); 
-				console.log("PDF sauvegardé avec succès.");
+				pdf.save(fileName); 
+				console.log(`PDF sauvegardé avec succès : ${fileName}`);
 			})
 			.catch((err) => {
 				console.error("Erreur lors du traitement des images :", err);
@@ -657,63 +696,89 @@ function addSignatures(pdf, entreprise, representantNom, agentNom, signatures, s
 
 
     // Fonction pour initialiser un canvas avec support tactile et souris
-    function setupSignatureCanvas(canvasId, clearButtonId) {
-        const canvas = document.getElementById(canvasId);
-        const context = canvas.getContext("2d");
-        let isDrawing = false;
+	function setupSignatureCanvas(canvasId, clearButtonId) {
+		const canvas = document.getElementById(canvasId);
+		const context = canvas.getContext("2d");
+		let isDrawing = false;
+		
+		 // Crée un tampon pour sauvegarder le contenu
+		let tempCanvas = document.createElement("canvas");
+		let tempContext = tempCanvas.getContext("2d");
 
-        const getPosition = (event) => {
-            const rect = canvas.getBoundingClientRect();
-            if (event.touches && event.touches[0]) {
-                return {
-                    x: event.touches[0].clientX - rect.left,
-                    y: event.touches[0].clientY - rect.top
-                };
-            } else {
-                return {
-                    x: event.clientX - rect.left,
-                    y: event.clientY - rect.top
-                };
-            }
-        };
+		// Synchroniser la taille réelle du canvas avec son affichage tout en sauvegardant
+		const synchronizeCanvasSize = () => {
+			// Sauvegarde le contenu du canvas actuel
+			tempCanvas.width = canvas.width;
+			tempCanvas.height = canvas.height;
+			tempContext.drawImage(canvas, 0, 0);
 
-        const startDrawing = (event) => {
-            isDrawing = true;
-            const pos = getPosition(event);
-            context.beginPath();
-            context.moveTo(pos.x, pos.y);
-        };
+		// Ajuste la taille interne du canvas
+		const rect = canvas.getBoundingClientRect(); // Taille affichée du canvas
+		canvas.width = rect.width; // Définir la largeur interne réelle
+		canvas.height = rect.height; // Définir la hauteur interne réelle
 
-        const draw = (event) => {
-            if (!isDrawing) return;
-            const pos = getPosition(event);
-            context.lineTo(pos.x, pos.y);
-            context.stroke();
-        };
+		// Restaure le contenu sauvegardé dans le canvas redimensionné
+		context.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+		};
+		
+		// Fonction pour obtenir les coordonnées corrigées
+		const getPosition = (event) => {
+			const rect = canvas.getBoundingClientRect(); // Dimensions du canvas
+			if (event.touches && event.touches[0]) {
+				return {
+					x: event.touches[0].clientX - rect.left, // Coordonnée X relative
+					y: event.touches[0].clientY - rect.top  // Coordonnée Y relative
+				};
+			} else {
+				return {
+					x: event.clientX - rect.left,
+					y: event.clientY - rect.top
+				};
+			}
+		};
 
-        const stopDrawing = () => {
-            isDrawing = false;
-        };
+		const startDrawing = (event) => {
+			event.preventDefault();
+			isDrawing = true;
+			hasSignature = true;
+			const pos = getPosition(event);
+			context.beginPath();
+			context.moveTo(pos.x, pos.y);
+		};
 
-        canvas.addEventListener("mousedown", startDrawing);
-        canvas.addEventListener("mousemove", draw);
-        canvas.addEventListener("mouseup", stopDrawing);
-        canvas.addEventListener("mouseleave", stopDrawing);
+		const draw = (event) => {
+			if (!isDrawing) return;
+			event.preventDefault();
+			const pos = getPosition(event);
+			context.lineTo(pos.x, pos.y);
+			context.stroke();
+		};
 
-        canvas.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            startDrawing(e);
-        });
-        canvas.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-            draw(e);
-        });
-        canvas.addEventListener("touchend", stopDrawing);
-        canvas.addEventListener("touchcancel", stopDrawing);
+		const stopDrawing = () => {
+			isDrawing = false;
+		};
 
-        document.getElementById(clearButtonId).addEventListener("click", () => {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-        });
+		// Synchronisation de la taille réelle
+		synchronizeCanvasSize();
+		window.addEventListener("resize", synchronizeCanvasSize); // Recalcule si la fenêtre est redimensionnée
+
+		// Écouteurs pour les événements de souris
+		canvas.addEventListener("mousedown", startDrawing);
+		canvas.addEventListener("mousemove", draw);
+		canvas.addEventListener("mouseup", stopDrawing);
+		canvas.addEventListener("mouseleave", stopDrawing);
+
+		// Écouteurs pour les événements tactiles
+		canvas.addEventListener("touchstart", startDrawing);
+		canvas.addEventListener("touchmove", draw);
+		canvas.addEventListener("touchend", stopDrawing);
+		canvas.addEventListener("touchcancel", stopDrawing);
+
+		// Bouton d'effacement
+		document.getElementById(clearButtonId).addEventListener("click", () => {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			hasSignature = false; // Réinitialiser l'état de la signature
+		});
 
         return canvas;
     }
