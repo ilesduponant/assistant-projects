@@ -623,6 +623,7 @@ async function genererPDF(data) {
 				addFootPage(pdf); // Ajouter l'en-tête et pied de page
 				pdf.save(fileName); 
 				console.log(`PDF sauvegardé avec succès : ${fileName}`);
+				alert(`✅PDF enregistré avec succès : ${fileName}✅`);
 			})
 			.catch((err) => {
 				console.error("Erreur lors du traitement des images :", err);
