@@ -107,169 +107,201 @@ function openEditorInNewTab(photoData, index) {
     const editorWindow = window.open("", "_blank");
 
     editorWindow.document.write(`
-        <html>
-        <head>
-            <title>Édition de photo</title>
-	    <link rel="stylesheet" href="style.css" />
-            <style>
-                body { font-family: Arial; margin: 20px; }
-                #toolbar button { margin-right: 5px; }
-                #toolbar input { margin-right: 10px; }
-            </style>
-        </head>
-        <body>
-	<main class="editeur">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Édition de photo</title>
 
-        <h2>Éditeur de photo</h2>
+    <!-- CSS externe -->
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-        <div id="toolbar">
-            <button type="button" onclick="setTool('free')">Trait libre</button>
-            <button type="button" onclick="setTool('line')">Ligne</button>
-            <button type="button" onclick="setTool('rect')">Rectangle</button>
-            <button type="button" onclick="setTool('circle')">Cercle</button>
-            <button type="button" onclick="setTool('eraser')">Gomme</button>
+<body>
+<main class="editeur">
 
-            <input type="color" id="colorPicker" value="#ff0000" onchange="setColor(this.value)">
-            <input type="range" id="sizePicker" min="1" max="20" value="3" onchange="setSize(this.value)">
+    <h2>Éditeur de photo</h2>
 
-            <button type="button" onclick="undo()">Undo</button>
-            <button type="button" onclick="redo()">Redo</button>
+    <div id="toolbar">
+        <button onclick="setTool('free')">Trait libre</button>
+        <button onclick="setTool('line')">Ligne</button>
+        <button onclick="setTool('rect')">Rectangle</button>
+        <button onclick="setTool('circle')">Cercle</button>
+        <button onclick="setTool('eraser')">Gomme</button>
 
-            <button type="button" onclick="saveEditedImage()">Sauvegarder</button>
-        </div>
+        <input type="color" value="#ff0000" onchange="setColor(this.value)">
+        <input type="range" min="1" max="20" value="3" onchange="setSize(this.value)">
 
-        <canvas id="canvas" width="800" height="500" style="border:1px solid #000"></canvas>
+        <button onclick="undo()">Undo</button>
+        <button onclick="redo()">Redo</button>
 
-        <script>
-            const canvas = document.getElementById("canvas");
-            const ctx = canvas.getContext("2d");
+        <button onclick="saveEditedImage()">Sauvegarder</button>
+    </div>
 
-            let tool = "free";
-            let drawing = false;
-            let startX = 0;
-            let startY = 0;
-            let color = "#ff0000";
-            let size = 3;
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
 
-            let undoStack = [];
-            let redoStack = [];
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-            function setTool(t) { tool = t; }
-            function setColor(c) { color = c; }
-            function setSize(s) { size = s; }
+let tool = "free";
+let drawing = false;
+let startX = 0;
+let startY = 0;
+let color = "#ff0000";
+let size = 3;
+let canvasReady = false;
 
-            function saveState() {
-                undoStack.push(canvas.toDataURL());
-                redoStack = [];
-            }
+let undoStack = [];
+let redoStack = [];
 
-            function undo() {
-                if (undoStack.length > 1) {
-                    redoStack.push(undoStack.pop());
-                    restoreState(undoStack[undoStack.length - 1]);
-                }
-            }
+function setTool(t) { tool = t; }
+function setColor(c) { color = c; }
+function setSize(s) { size = parseInt(s, 10); }
 
-            function redo() {
-                if (redoStack.length > 0) {
-                    const state = redoStack.pop();
-                    undoStack.push(state);
-                    restoreState(state);
-                }
-            }
+function saveState() {
+    undoStack.push(canvas.toDataURL());
+    redoStack = [];
+    if (undoStack.length > 50) undoStack.shift();
+}
 
-            function restoreState(state) {
-                const img = new Image();
-                img.onload = () => {
-		    console.log("Natural Width:", img.naturalWidth);
-                    console.log("Natural Height:", img.naturalHeight);
-                    ctx.clearRect(0, 0);
-                    ctx.drawImage(img, 0, 0);
-                };
-                img.src = state;
-            }
+function restoreState(state) {
+    const img = new Image();
+    img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = state;
+}
 
-            // Charger l'image envoyée par la fenêtre parent
-            const img = new Image();
-            img.onload = () => {
+function undo() {
+    if (undoStack.length > 1) {
+        redoStack.push(undoStack.pop());
+        restoreState(undoStack[undoStack.length - 1]);
+    }
+}
 
-	    	canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                saveState();
-            };
-            img.src = "${photoData}";
+function redo() {
+    if (redoStack.length) {
+        const state = redoStack.pop();
+        undoStack.push(state);
+        restoreState(state);
+    }
+}
 
-            canvas.addEventListener("mousedown", (e) => {
-                drawing = true;
-                startX = e.offsetX;
-                startY = e.offsetY;
+function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
-                ctx.strokeStyle = tool === "eraser" ? "white" : color;
-                ctx.lineWidth = size;
+    const p = e.touches ? e.touches[0] : e;
+    return {
+        x: (p.clientX - rect.left) * scaleX,
+        y: (p.clientY - rect.top) * scaleY
+    };
+}
 
-                if (tool === "free" || tool === "eraser") {
-                    ctx.beginPath();
-                    ctx.moveTo(startX, startY);
-                }
-            });
+const baseImg = new Image();
+baseImg.onload = () => {
+    resizeCanvas();
+    ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+    saveState();
+    canvasReady = true;
+};
+baseImg.src = "${photoData}";
 
-            canvas.addEventListener("mousemove", (e) => {
-                if (!drawing) return;
+function resizeCanvas() {
+    const container = document.getElementById("canvas-container");
+    const editor = document.querySelector("main.editeur");
 
-                if (tool === "free" || tool === "eraser") {
-                    ctx.lineTo(e.offsetX, e.offsetY);
-                    ctx.stroke();
-                }
-            });
+    const maxW = container.clientWidth;
+    const maxH = editor.clientHeight - container.offsetTop;
 
-            canvas.addEventListener("mouseup", (e) => {
-                if (!drawing) return;
-                drawing = false;
+    const ratio = Math.min(
+        maxW / baseImg.naturalWidth,
+        maxH / baseImg.naturalHeight
+    );
 
-                const endX = e.offsetX;
-                const endY = e.offsetY;
+    canvas.width = Math.round(baseImg.naturalWidth * ratio);
+    canvas.height = Math.round(baseImg.naturalHeight * ratio);
+}
 
-                ctx.strokeStyle = color;
-                ctx.lineWidth = size;
+// Événements souris
+canvas.addEventListener("mousedown", startDraw);
+canvas.addEventListener("mousemove", draw);
+canvas.addEventListener("mouseup", endDraw);
+canvas.addEventListener("mouseleave", endDraw);
 
-                if (tool !== "free" && tool !== "eraser") {
-                    ctx.beginPath();
-                    switch (tool) {
-                        case "line":
-                            ctx.moveTo(startX, startY);
-                            ctx.lineTo(endX, endY);
-                            ctx.stroke();
-                            break;
-                        case "rect":
-                            ctx.strokeRect(startX, startY, endX - startX, endY - startY);
-                            break;
-                        case "circle":
-                            const radius = Math.sqrt((endX - startX)**2 + (endY - startY)**2);
-                            ctx.arc(startX, startY, radius, 0, Math.PI * 2);
-                            ctx.stroke();
-                            break;
-                    }
-                }
+// Événements tactiles
+canvas.addEventListener("touchstart", startDraw, { passive: false });
+canvas.addEventListener("touchmove", draw, { passive: false });
+canvas.addEventListener("touchend", endDraw, { passive: false });
 
-                saveState();
-            });
+function startDraw(e) {
+    if (!canvasReady) return;
+    e.preventDefault();
 
-            function saveEditedImage() {
-                const finalImage = canvas.toDataURL("image/png");
+    drawing = true;
+    const pos = getCanvasPos(e);
+    startX = pos.x;
+    startY = pos.y;
 
-                // Envoi à la fenêtre parent
-                window.opener.postMessage({
-                    editedImage: finalImage,
-                    index: ${index}
-                }, "*");
+    ctx.lineWidth = size;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = color;
+    ctx.globalCompositeOperation =
+        tool === "eraser" ? "destination-out" : "source-over";
 
-                window.close();
-            }
-        <\/script>
-        </main>
-        </body>
-        </html>
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+}
+
+function draw(e) {
+    if (!drawing) return;
+    e.preventDefault();
+
+    const pos = getCanvasPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+}
+
+function endDraw(e) {
+    if (!drawing) return;
+    drawing = false;
+
+    if (tool !== "free" && tool !== "eraser") {
+        const pos = getCanvasPos(e);
+        ctx.beginPath();
+
+        if (tool === "line") {
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(pos.x, pos.y);
+        } else if (tool === "rect") {
+            ctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
+        } else if (tool === "circle") {
+            const r = Math.hypot(pos.x - startX, pos.y - startY);
+            ctx.arc(startX, startY, r, 0, Math.PI * 2);
+        }
+        ctx.stroke();
+    }
+
+    saveState();
+}
+
+function saveEditedImage() {
+    window.opener.postMessage({
+        editedImage: canvas.toDataURL("image/png"),
+        index: ${index}
+    }, "*");
+    window.close();
+}
+</script>
+
+</main>
+</body>
+</html>
     `);
 }
 
