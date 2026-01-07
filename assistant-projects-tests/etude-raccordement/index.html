@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulaire étude de raccordement</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Etude de raccordement</h1>
+    </header>
+    <main>
+      <form id="raccordementForm">
+	<hr>
+	<h3>Informations client</h3>
+	<label for="nomCli">Nom</label>
+	<input type="text" id="nomCli" oninput="this.value = this.value.toUpperCase()" maxlength="64" required />
+	<label for="prenomCli">Prénom</label>
+	<input type="text" id="prenomCli" maxlenght="64" required />
+	<label for="adresseCli">Adresse</label>
+	<input type="text" id="adresseCli" maxlenght="64" required />
+	<label for="cpCli">Code postal</label>
+	<input type="integer" id="cpCli" maxlenght="5" required />
+	<label for="noDossier">Numéro de dossier</label>
+	<input type="text" id="noDossier" maxlenght="64" required />
+
+	<hr />
+
+	<h3>Etude du branchement électrique</h3>
+	<label for="noDipole">Numéro dipole</label>
+	<input type="integer" id="noDipole" required />
+	<label for="nomPoste">Nom et n° du poste</label>
+	<input type="integer" id="nomPoste" required />
+	<label for="dteSouhaitee">Date souhaitée</label>
+	<input type="date" id="dteSouhaitee" required />
+	<label for="commentaire">Commentaire</label>
+	<textarea id="commentaire" rows="4" required></textarea>
+	<hr />
+        <h2>Gestion des photos</h2>
+
+        <input type="file" id="photos" accept="image/*" multiple>
+        <button type="button" id="take-photo">📷 Prendre une photo</button>
+        <button type="button" id="save-photo" style="display:none;">Enregistrer la photo</button>
+
+
+        <video id="camera" autoplay style="display:none; width:300px;"></video>
+        <canvas id="camera-canvas" style="display:none;"></canvas>
+
+        <h3>Aperçu des photos</h3>
+        <div id="photo-preview"></div>
+
+        <hr>
+<button type="submit" id="generatePDF">Générer le PDF</button>
+      </form>
+      <script src="script.js"></script>
+    </main>
+  </body>
+</html>
