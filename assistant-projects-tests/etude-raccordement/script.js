@@ -334,6 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // PAGE 1 : Entête et Infos
         try {
             const enteteBase64 = await imageToBase64("enteteImg.png");
+	    //nom fichier/var, type, offset W, offset H, W, H (cm)
             pdf.addImage(enteteBase64, 'PNG', 1, 0, 18.62, 11.67);
         } catch (e) { console.warn(e); }
 
@@ -346,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             pdf.addPage();
             const consuelB64 = await imageToBase64("consuelImg.png");
-            pdf.addImage(consuelB64, 'PNG', 1, 0, 18.62, 11.67);
+            pdf.addImage(consuelB64, 'PNG', 1, 0, 17.88, 24.63);
         } catch (e) { console.warn(e); }
 
         // PAGE 3 : Compteur
