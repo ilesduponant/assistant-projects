@@ -7,7 +7,7 @@ const camera = document.getElementById("camera");
 const cameraCanvas = document.getElementById("camera-canvas");
 const cameraContext = cameraCanvas.getContext("2d");
 
-let photoList = []; // Stockera des objets : { original, current, drawings, label }
+let photoList = []; //Tableau d'objets : { original, current, drawings, label }
 
 //upload de photos
 photosInput.addEventListener("change", (event) => {
@@ -30,8 +30,8 @@ takePhotoButton.addEventListener("click", async () => {
             audio: false
         });
         camera.srcObject = stream;
-        camera.setAttribute("playsinline", true); // Requis pour iOS
-        camera.style.display = "block";
+        camera.setAttribute("playsinline", true);
+	camera.style.display = "block";
         savePhotoButton.style.display = "inline-block";
         camera.play();
     } catch (error) {
@@ -55,7 +55,7 @@ savePhotoButton.addEventListener("click", () => {
     savePhotoButton.style.display = "none";
 });
 
-//ajout et suppression des photos via l'aperçu
+//affichage et suppression des photos via l'aperçu
 function addPhotoToPreview(photoData) {
     const photoObject = {
         original: photoData,
@@ -63,18 +63,20 @@ function addPhotoToPreview(photoData) {
         drawings: [],
         label: ""
     };
-
+    //div pour contenir les éléments ci-dessous
     const photoContainer = document.createElement("div");
     photoContainer.style.display = "inline-block";
     photoContainer.style.margin = "5px";
     photoContainer.style.position = "relative"; 
 
+   //aperçu de l'image
     const img = document.createElement("img");
     img.src = photoObject.current;
     img.style.width = "100px";
     img.style.border = "1px solid #ccc";
     photoContainer.appendChild(img);
-
+    
+    //bouton de suppression
     const deleteButton = document.createElement("button");
     deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
     deleteButton.className = "delete-button";     
@@ -84,7 +86,7 @@ function addPhotoToPreview(photoData) {
     };
     photoContainer.appendChild(deleteButton);
 
-    // 4. L'INPUT (Libellé)
+    //input libellé
     const labelInp = document.createElement("input");
     labelInp.type = "text";
     labelInp.placeholder = "Libellé de la photo";
@@ -93,7 +95,7 @@ function addPhotoToPreview(photoData) {
     labelInp.oninput = () => { photoObject.label = labelInp.value; };
     photoContainer.appendChild(labelInp);
 
-    // 5. LE BOUTON MODIFIER
+    //bouton de modification
     const editBtn = document.createElement("button");
     editBtn.type = "button";
     editBtn.textContent = "Modifier";
@@ -104,17 +106,15 @@ function addPhotoToPreview(photoData) {
     };
     photoContainer.appendChild(editBtn);
 
-    // AJOUT FINAL AU DOM
     photoPreviewContainer.appendChild(photoContainer);
     photoList.push(photoObject);
 }
-/* ============================================================
-   ÉDITEUR AVEC GESTION DES DESSINS
-============================================================ */
+//-----------------------------------------
+//onglet édition d'image
 function openEditorInNewTab(originalData, index, existingDrawings) {
     const editorWindow = window.open("", "_blank");
     
-    // On convertit les dessins en chaîne sécurisée pour le document.write
+    //conversion des dessins en str 
     const drawingsJson = JSON.stringify(existingDrawings);
 
     editorWindow.document.write(`
@@ -249,23 +249,21 @@ function openEditorInNewTab(originalData, index, existingDrawings) {
     `);
 }
 
-/* ============================================================
-   RÉCEPTION DE L'IMAGE
-============================================================ */
+//reception de l'image
 window.addEventListener("message", (event) => {
     if (event.data.editedImage) {
         const { editedImage, drawings, index } = event.data;
         photoList[index].current = editedImage;
-        photoList[index].drawings = drawings; // On sauvegarde les calques !
+        photoList[index].drawings = drawings; // On sauvegarde les calques
 
         const targetImg = photoPreviewContainer.children[index].querySelector("img");
         if (targetImg) targetImg.src = editedImage;
     }
 });
 
-/* ============================================================
-   FONCTIONS DE SYNCHRONISATION (IDENTITE / ADRESSE)
-============================================================ */
+
+//--------------------------------------
+//fonctions générales
 function syncIdentite() {
     const n = document.getElementById('nomCli').value;
     const p = document.getElementById('prenomCli').value;
@@ -286,29 +284,55 @@ document.addEventListener("DOMContentLoaded", () => {
     const generatePDFBtn = document.getElementById("generatePDF");
 
     let hasSignature = false;
-    
-    // Initialisation des canvases pour les signatures
+
+    //appel de la génération du canvas de signature
     const canvasRepresentant = setupSignatureCanvas("signature-representant-canvas", "clear-representant");
 
-    // --- LOGIQUE DE VALIDATION ---
-    form.addEventListener("submit", (event) => {
-        if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
-            event.preventDefault(); // Bloque l'envoi
-            alert("La signature est obligatoire et ne peut pas être vide.");
-        }
-    });
-
-    // Fonction pour vérifier si le canvas est réellement vide pixel par pixel
+    //vérification du canvas : true si vide
     function isCanvasEmpty(canvas) {
         const blank = document.createElement('canvas');
         blank.width = canvas.width;
         blank.height = canvas.height;
-        // On compare les images DataURL du canvas actuel et d'un canvas vierge
+        // Compare l'image actuelle avec un canvas vierge
         return canvas.toDataURL() === blank.toDataURL();
     }
-    // ----------------------------
 
-    function setupSignatureCanvas(canvasId, clearButtonId) {
+    //bouton de génération : pas de reset du formulaire à la validation
+    generatePDFBtn.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        // Vérification de la signature
+        if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
+            alert("⚠️ La signature est obligatoire avant de générer le PDF !");
+            return;
+        }
+
+        //données et appel de la fonction de génération
+        const data = {
+            titre: "BON D'INTERVENTION",
+            info: "Données de test statiques",
+            signature: canvasRepresentant.toDataURL("image/png")
+        };
+
+        await genererPDF(data);
+    });
+
+async function genererPDF(data) {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ unit: 'cm' });
+
+        pdf.addImage("enteteImg.png", 'PNG', 1, 0, 11.67, 18.62);
+        
+        pdf.setFontSize(12);
+        pdf.text(`Client : ${data.nomCli} ${data.prenomCli}`, 1, 20);
+        pdf.text(`Dossier : ${data.noDossier}`, 1, 21);
+
+        pdf.addImage(data.signature, "PNG", 1, 22, 5, 2.5);
+
+        pdf.save("intervention.pdf");
+    }
+    //initialisation du canvas de signature
+function setupSignatureCanvas(canvasId, clearButtonId) {
         const canvas = document.getElementById(canvasId);
         const context = canvas.getContext("2d");
         let isDrawing = false;
@@ -346,7 +370,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const startDrawing = (event) => {
             event.preventDefault();
             isDrawing = true;
-            // On ne passe pas hasSignature à true ici, on attend le mouvement (draw)
             const pos = getPosition(event);
             context.beginPath();
             context.moveTo(pos.x, pos.y);
@@ -355,8 +378,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const draw = (event) => {
             if (!isDrawing) return;
             event.preventDefault();
-            hasSignature = true; // Capté lors du mouvement réel du stylet/doigt
-            const pos = getPosition(event);
+            hasSignature = true; // Marque comme signé dès qu'un trait est effectué sur le canvas 
+	    const pos = getPosition(event);
             context.lineTo(pos.x, pos.y);
             context.stroke();
         };
