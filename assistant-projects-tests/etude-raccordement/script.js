@@ -263,21 +263,20 @@ window.addEventListener("message", (event) => {
 
 
 //--------------------------------------
-//fonctions générales
-function syncIdentite() {
+// Les fonctions appelées par onclick dans le HTML doivent être globales
+window.syncIdentite = function() {
     const n = document.getElementById('nomCli').value;
     const p = document.getElementById('prenomCli').value;
     document.getElementById('nomTravaux').value = n;
     document.getElementById('prenomTravaux').value = p;
-}
+};
 
-function copyAdresseClient() {
+window.copyAdresseClient = function() {
     document.getElementById('adresseTravaux').value = document.getElementById('adresseCli').value;
     document.getElementById('complementAdrTravaux').value = document.getElementById('complementAdrCli').value;
     document.getElementById('cpTravaux').value = document.getElementById('cpCli').value;
     document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
-}
-
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("raccordementForm");
@@ -293,7 +292,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return canvas.toDataURL() === blank.toDataURL();
     }
 
-    // FONCTION RÉUTILISABLE POUR CHARGER DES IMAGES LOCALES SANS ERREUR CORS
     const imageToBase64 = (url) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -306,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ctx.drawImage(img, 0, 0);
                 resolve(canvas.toDataURL("image/png"));
             };
-            img.onerror = (e) => reject("Erreur de chargement : " + url);
+            img.onerror = () => reject("Erreur de chargement : " + url);
             img.src = url;
         });
     };
@@ -315,11 +313,10 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
 
         if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
-            alert("⚠️ La signature est obligatoire !");
+            alert("⚠️ La signature est obligatoire avant de générer le PDF !");
             return;
         }
 
-        // Récupération dynamique des valeurs (évite le "undefined")
         const data = {
             nomCli: document.getElementById("nomCli")?.value || "",
             prenomCli: document.getElementById("prenomCli")?.value || "",
@@ -334,32 +331,30 @@ document.addEventListener("DOMContentLoaded", () => {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ unit: 'cm' });
 
+        // PAGE 1 : Entête et Infos
         try {
-            // Utilisation de la fonction réutilisable pour l'entête
             const enteteBase64 = await imageToBase64("enteteImg.png");
             pdf.addImage(enteteBase64, 'PNG', 1, 0, 18.62, 11.67);
-	    pdf.setPage(2);
-	    const consuelB64 = await imageToBase64("consuelImg.png");
-            pdf.addImage(consuelB64, 'PNG', 1, 0, 18.62, 11.67);
-	    pdf.setPage(3);
-	    const compteurB64 = await imageToBase64("compteurImg.png");
-            pdf.addImage(compteurB64, 'PNG', 1, 0, 18.62, 11.67);
+        } catch (e) { console.warn(e); }
 
-            
-            // Si tu as une autre image, tu fais pareil :
-            // const logoBase64 = await imageToBase64("logo.png");
-            // pdf.addImage(logoBase64, ...);
-
-        } catch (error) {
-            console.error(error);
-            // On continue sans l'image si elle échoue
-        }
-        
         pdf.setFontSize(12);
         pdf.text(`Client : ${data.nomCli} ${data.prenomCli}`, 1, 14);
         pdf.text(`Dossier : ${data.noDossier}`, 1, 15);
-
         pdf.addImage(data.signature, "PNG", 1, 16, 5, 2.5);
+
+        // PAGE 2 : Consuel
+        try {
+            pdf.addPage();
+            const consuelB64 = await imageToBase64("consuelImg.png");
+            pdf.addImage(consuelB64, 'PNG', 1, 0, 18.62, 11.67);
+        } catch (e) { console.warn(e); }
+
+        // PAGE 3 : Compteur
+        try {
+            pdf.addPage();
+            const compteurB64 = await imageToBase64("compteurImg.png");
+            pdf.addImage(compteurB64, 'PNG', 1, 0, 18.62, 11.67);
+        } catch (e) { console.warn(e); }
 
         pdf.save("intervention.pdf");
     }
