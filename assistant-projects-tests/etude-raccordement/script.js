@@ -1,6 +1,4 @@
-/* ============================================================
-   VARIABLES GLOBALES
-============================================================ */
+//variables
 const photosInput = document.getElementById("photos");
 const photoPreviewContainer = document.getElementById("photo-preview");
 const takePhotoButton = document.getElementById("take-photo");
@@ -9,12 +7,9 @@ const camera = document.getElementById("camera");
 const cameraCanvas = document.getElementById("camera-canvas");
 const cameraContext = cameraCanvas.getContext("2d");
 
-let photoList = [];
-let currentEditingIndex = null;
+let photoList = []; // Stockera des objets : { original, current, drawings, label }
 
-/* ============================================================
-   UPLOAD DE PHOTOS
-============================================================ */
+//upload de photos
 photosInput.addEventListener("change", (event) => {
     const files = Array.from(event.target.files);
     files.forEach((file) => {
@@ -24,21 +19,23 @@ photosInput.addEventListener("change", (event) => {
             reader.readAsDataURL(file);
         }
     });
+    event.target.value = ""; // Vide l'input pour permettre de remettre la même photo
 });
 
-/* ============================================================
-   CAMÉRA
-============================================================ */
+//gestion caméra
 takePhotoButton.addEventListener("click", async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" }
+            video: { facingMode: "environment" },
+            audio: false
         });
         camera.srcObject = stream;
+        camera.setAttribute("playsinline", true); // Requis pour iOS
         camera.style.display = "block";
         savePhotoButton.style.display = "inline-block";
+        camera.play();
     } catch (error) {
-        console.error("Caméra inaccessible :", error);
+        alert("Erreur caméra : " + error);
     }
 });
 
@@ -50,6 +47,7 @@ savePhotoButton.addEventListener("click", () => {
     const photoData = cameraCanvas.toDataURL("image/png");
     addPhotoToPreview(photoData);
 
+    // Arrêt de la caméra
     const stream = camera.srcObject;
     if (stream) stream.getTracks().forEach((t) => t.stop());
 
@@ -57,265 +55,334 @@ savePhotoButton.addEventListener("click", () => {
     savePhotoButton.style.display = "none";
 });
 
-/* ============================================================
-   APERCU DES PHOTOS
-============================================================ */
+//ajout et suppression des photos via l'aperçu
 function addPhotoToPreview(photoData) {
-    const index = photoList.length;
+    const photoObject = {
+        original: photoData,
+        current: photoData,
+        drawings: [],
+        label: ""
+    };
 
-    const container = document.createElement("div");
+    const photoContainer = document.createElement("div");
+    photoContainer.style.display = "inline-block";
+    photoContainer.style.margin = "5px";
+    photoContainer.style.position = "relative"; 
 
     const img = document.createElement("img");
-    img.src = photoData;
+    img.src = photoObject.current;
     img.style.width = "100px";
     img.style.border = "1px solid #ccc";
-    container.appendChild(img);
-
-    const labelInput = document.createElement("input");
-    labelInput.type = "text";
-    labelInput.placeholder = "Libellé";
-    labelInput.style.display = "block";
-    labelInput.style.marginTop = "5px";
-    container.appendChild(labelInput);
-
-    const editButton = document.createElement("button");
-    editButton.type = "button";
-    editButton.textContent = "Modifier";
-    editButton.className = "edit-button";
-    editButton.onclick = () => openEditorInNewTab(photoData, index);
-    container.appendChild(editButton);
+    photoContainer.appendChild(img);
 
     const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.innerHTML = "🗑";
-    deleteButton.className = "delete-button";
+    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+    deleteButton.className = "delete-button";     
     deleteButton.onclick = () => {
-        photoPreviewContainer.removeChild(container);
-        photoList.splice(index, 1);
+        photoPreviewContainer.removeChild(photoContainer);
+        photoList = photoList.filter((p) => p !== photoObject);
     };
-    container.appendChild(deleteButton);
+    photoContainer.appendChild(deleteButton);
 
-    photoPreviewContainer.appendChild(container);
+    // 4. L'INPUT (Libellé)
+    const labelInp = document.createElement("input");
+    labelInp.type = "text";
+    labelInp.placeholder = "Libellé de la photo";
+    labelInp.style.display = "block";
+    labelInp.style.marginTop = "5px";
+    labelInp.oninput = () => { photoObject.label = labelInp.value; };
+    photoContainer.appendChild(labelInp);
 
-    photoList.push({ data: photoData, label: labelInput });
+    // 5. LE BOUTON MODIFIER
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.textContent = "Modifier";
+    editBtn.style.width = "100%";
+    editBtn.onclick = () => {
+        const idx = photoList.indexOf(photoObject);
+        openEditorInNewTab(photoObject.original, idx, photoObject.drawings);
+    };
+    photoContainer.appendChild(editBtn);
+
+    // AJOUT FINAL AU DOM
+    photoPreviewContainer.appendChild(photoContainer);
+    photoList.push(photoObject);
 }
-
 /* ============================================================
-   OUVERTURE DE L'ÉDITEUR DANS UN NOUVEL ONGLET
+   ÉDITEUR AVEC GESTION DES DESSINS
 ============================================================ */
-function openEditorInNewTab(photoData, index) {
+function openEditorInNewTab(originalData, index, existingDrawings) {
     const editorWindow = window.open("", "_blank");
+    
+    // On convertit les dessins en chaîne sécurisée pour le document.write
+    const drawingsJson = JSON.stringify(existingDrawings);
 
     editorWindow.document.write(`
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Éditeur Mobile</title>
+    <title>Éditeur</title>
     <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; overflow: hidden; background: #333; }
-        #toolbar { 
-            display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; 
-            background: #f8f9fa; border-bottom: 1px solid #ccc; justify-content: center;
-        }
-        .tool-btn {
-            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-            border: 1px solid #ccc; background: white; border-radius: 8px; cursor: pointer;
-            touch-action: manipulation;
-        }
-        .tool-btn.active { background-color: #007bff; color: white; border-color: #0056b3; }
+        body { margin: 0; background: #222; font-family: sans-serif; overflow: hidden; }
+        #toolbar { display: flex; gap: 5px; padding: 10px; background: #eee; flex-wrap: wrap; justify-content: center; }
+        .tool-btn { width: 44px; height: 44px; border: 1px solid #ccc; background: white; border-radius: 5px; cursor: pointer; display:flex; align-items:center; justify-content:center; }
+        .tool-btn.active { background: #007bff; color: white; }
         .tool-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
-        
-        #canvas-container { 
-            display: flex; justify-content: center; align-items: center; 
-            height: calc(100vh - 120px); background: #222; overflow: hidden;
-        }
-        canvas { 
-            background: white; 
-            touch-action: none; /* Empêche le scroll pendant le dessin */
-            max-width: 100%; max-height: 100%;
-        }
-        .controls-row { display: flex; align-items: center; gap: 10px; padding: 5px 10px; background: #eee; }
-        input[type="range"] { flex-grow: 1; }
+        #canvas-container { height: calc(100vh - 120px); display: flex; justify-content: center; align-items: center; }
+        canvas { background: white; touch-action: none; max-width: 100%; max-height: 100%; }
     </style>
 </head>
 <body>
-
     <div id="toolbar">
-        <button class="tool-btn active" onclick="setTool('free', this)" title="Crayon">
-            <svg viewBox="0 0 24 24"><path d="M12 19c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM6 1c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM18 1c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM12 1c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 7c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-        </button>
-        <button class="tool-btn" onclick="setTool('line', this)">
-            <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"></line></svg>
-        </button>
-        <button class="tool-btn" onclick="setTool('rect', this)">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
-        </button>
-        <button class="tool-btn" onclick="setTool('circle', this)">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle></svg>
-        </button>
-        <button class="tool-btn" onclick="setTool('text', this)">
-            <svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
-        </button>
-        <button class="tool-btn" onclick="setTool('eraser', this)">
-            <svg viewBox="0 0 24 24"><path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z"></path></svg>
-        </button>
-        <button class="tool-btn" onclick="undo()" style="margin-left:auto">↩</button>
-        <button class="tool-btn" onclick="saveEditedImage()" style="background:#28a745; color:white; border:none">✔</button>
+        <button class="tool-btn active" onclick="setTool('free', this)"><svg viewBox="0 0 24 24"><path d="M12 19c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM6 1c-1.1 0-2 ..."/></svg></button>
+        <button class="tool-btn" onclick="setTool('line', this)"><svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"></line></svg></button>
+        <button class="tool-btn" onclick="setTool('rect', this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg></button>
+        <button class="tool-btn" onclick="setTool('circle', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle></svg></button>
+        <button class="tool-btn" onclick="setTool('text', this)"><svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></button>
+        <button class="tool-btn" onclick="setTool('eraser', this)"><svg viewBox="0 0 24 24"><path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z"></path></svg></button>
+        <button class="tool-btn" onclick="undo()">↩</button>
+        <button class="tool-btn" onclick="save()" style="background:#28a745; color:white;">✔</button>
     </div>
-
-    <div class="controls-row">
-        <input type="color" value="#ff0000" id="colorPicker" onchange="setColor(this.value)">
-        <input type="range" min="1" max="25" value="5" onchange="setSize(this.value)">
+    <div style="padding: 5px; background: #ddd; display: flex; gap: 10px; justify-content: center;">
+        <input type="color" id="col" value="#ff0000" onchange="color=this.value">
+        <input type="range" min="1" max="50" value="5" onchange="size=parseInt(this.value)">
     </div>
+    <div id="canvas-container"><canvas id="canvas"></canvas></div>
 
-    <div id="canvas-container">
-        <canvas id="canvas"></canvas>
-    </div>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        let tool = "free", drawing = false, color = "#ff0000", size = 5;
+        let startX, startY;
+        
+        // RECUPERATION DES DESSINS EXISTANTS
+        let undoStack = ${drawingsJson}; 
+        let currentPath = null;
+        
+        const baseImg = new Image();
+        baseImg.onload = () => {
+            const ratio = Math.min(window.innerWidth / baseImg.naturalWidth, (window.innerHeight - 150) / baseImg.naturalHeight);
+            canvas.width = baseImg.naturalWidth * ratio;
+            canvas.height = baseImg.naturalHeight * ratio;
+            drawAll();
+        };
+        baseImg.src = "${originalData}";
 
-<script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-let tool = "free", drawing = false;
-let startX = 0, startY = 0, color = "#ff0000", size = 5;
-let undoStack = [], redoStack = [], currentPath = null;
-const baseImg = new Image();
-
-baseImg.onload = () => {
-    const container = document.getElementById("canvas-container");
-    const ratio = Math.min(container.clientWidth / baseImg.naturalWidth, container.clientHeight / baseImg.naturalHeight);
-    canvas.width = baseImg.naturalWidth * ratio;
-    canvas.height = baseImg.naturalHeight * ratio;
-    drawAll();
-};
-baseImg.src = "${photoData}";
-
-function getCanvasPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    // Support Souris OU Tactile
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return {
-        x: (clientX - rect.left) * (canvas.width / rect.width),
-        y: (clientY - rect.top) * (canvas.height / rect.height)
-    };
-}
-
-// Event Listeners Souris
-canvas.addEventListener("mousedown", start);
-window.addEventListener("mousemove", move);
-window.addEventListener("mouseup", end);
-
-// Event Listeners Tactile
-canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); }, { passive: false });
-canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); }, { passive: false });
-canvas.addEventListener("touchend", (e) => { e.preventDefault(); end(e); }, { passive: false });
-
-function start(e) {
-    drawing = true;
-    const pos = getCanvasPos(e);
-    startX = pos.x; startY = pos.y;
-
-    if (tool === "free" || tool === "eraser") {
-        currentPath = { tool, color, size, points: [{ x: startX, y: startY }] };
-    }
-}
-
-function move(e) {
-    if (!drawing || tool === "text") return;
-    const pos = getCanvasPos(e);
-    
-    if (tool === "free" || tool === "eraser") {
-        currentPath.points.push({ x: pos.x, y: pos.y });
-    } else {
-        currentPath = { tool, color, size, points: [{ x: startX, y: startY }, { x: pos.x, y: pos.y }] };
-    }
-    drawAll();
-}
-
-function end(e) {
-    if (!drawing) return;
-    drawing = false;
-
-    if (tool === "text") {
-        const txt = prompt("Texte à ajouter :");
-        if (txt) undoStack.push({ tool: "text", color, size, points: [{ x: startX, y: startY }], text: txt });
-    } else if (currentPath) {
-        undoStack.push(currentPath);
-    }
-    currentPath = null;
-    drawAll();
-}
-
-function drawAll() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
-
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
-    const tCtx = tempCanvas.getContext("2d");
-
-    const paths = undoStack.concat(currentPath ? [currentPath] : []);
-    
-    paths.forEach(p => {
-        tCtx.globalCompositeOperation = p.tool === "eraser" ? "destination-out" : "source-over";
-        tCtx.strokeStyle = p.color; tCtx.fillStyle = p.color;
-        tCtx.lineWidth = p.size; tCtx.lineCap = "round"; tCtx.lineJoin = "round";
-        tCtx.beginPath();
-
-        if (p.tool === "free" || p.tool === "eraser") {
-            tCtx.moveTo(p.points[0].x, p.points[0].y);
-            p.points.forEach(pt => tCtx.lineTo(pt.x, pt.y));
-            tCtx.stroke();
-        } else if (p.tool === "line") {
-            tCtx.moveTo(p.points[0].x, p.points[0].y);
-            tCtx.lineTo(p.points[1].x, p.points[1].y);
-            tCtx.stroke();
-        } else if (p.tool === "rect") {
-            tCtx.strokeRect(p.points[0].x, p.points[0].y, p.points[1].x - p.points[0].x, p.points[1].y - p.points[0].y);
-        } else if (p.tool === "circle") {
-            const r = Math.hypot(p.points[1].x - p.points[0].x, p.points[1].y - p.points[0].y);
-            tCtx.arc(p.points[0].x, p.points[0].y, r, 0, Math.PI * 2);
-            tCtx.stroke();
-        } else if (p.tool === "text") {
-            tCtx.font = (p.size * 4) + "px Arial";
-            tCtx.fillText(p.text, p.points[0].x, p.points[0].y);
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
         }
-    });
-    ctx.drawImage(tempCanvas, 0, 0);
-}
 
-function setTool(t, btn) {
-    tool = t;
-    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-}
-function undo() { undoStack.pop(); drawAll(); }
-function setColor(c) { color = c; }
-function setSize(s) { size = parseInt(s); }
+        canvas.addEventListener("mousedown", start);
+        window.addEventListener("mousemove", move);
+        window.addEventListener("mouseup", end);
+        canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); }, {passive:false});
+        canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); }, {passive:false});
+        canvas.addEventListener("touchend", end);
 
-function saveEditedImage() {
-    window.opener.postMessage({ editedImage: canvas.toDataURL("image/png"), index: ${index} }, "*");
-    window.close();
-}
-</script>
+        function start(e) {
+            drawing = true; const p = getPos(e); startX = p.x; startY = p.y;
+            if(tool !== "text") currentPath = { tool, color, size, pts: [p] };
+        }
+
+        function move(e) {
+            if(!drawing || tool === "text") return;
+            const p = getPos(e);
+            if(tool === "free" || tool === "eraser") currentPath.pts.push(p);
+            else currentPath.pts = [{x:startX, y:startY}, p];
+            drawAll();
+        }
+
+        function end(e) {
+            if(!drawing) return; drawing = false;
+            if(tool === "text") {
+                const t = prompt("Texte :");
+                if(t) undoStack.push({ tool: "text", color, size, pts: [{x:startX, y:startY}], txt: t });
+            } else if(currentPath) undoStack.push(currentPath);
+            currentPath = null; drawAll();
+        }
+
+        function drawAll() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+            
+            const tmp = document.createElement("canvas");
+            tmp.width = canvas.width; tmp.height = canvas.height;
+            const tCtx = tmp.getContext("2d");
+
+            const paths = undoStack.concat(currentPath ? [currentPath] : []);
+            paths.forEach(p => {
+                tCtx.globalCompositeOperation = p.tool === "eraser" ? "destination-out" : "source-over";
+                tCtx.strokeStyle = p.color; tCtx.fillStyle = p.color; tCtx.lineWidth = p.size; tCtx.lineCap = "round"; tCtx.lineJoin = "round";
+                tCtx.beginPath();
+                if(p.tool === "free" || p.tool === "eraser") {
+                    tCtx.moveTo(p.pts[0].x, p.pts[0].y);
+                    p.pts.forEach(pt => tCtx.lineTo(pt.x, pt.y));
+                    tCtx.stroke();
+                } else if(p.tool === "line") {
+                    tCtx.moveTo(p.pts[0].x, p.pts[0].y); tCtx.lineTo(p.pts[1].x, p.pts[1].y); tCtx.stroke();
+                } else if(p.tool === "rect") {
+                    tCtx.strokeRect(p.pts[0].x, p.pts[0].y, p.pts[1].x - p.pts[0].x, p.pts[1].y - p.pts[0].y);
+                } else if(p.tool === "circle") {
+                    const r = Math.hypot(p.pts[1].x - p.pts[0].x, p.pts[1].y - p.pts[0].y);
+                    tCtx.arc(p.pts[0].x, p.pts[0].y, r, 0, Math.PI*2); tCtx.stroke();
+                } else if(p.tool === "text") {
+                    tCtx.font = (p.size * 4) + "px Arial"; tCtx.fillText(p.txt, p.pts[0].x, p.pts[0].y);
+                }
+            });
+            ctx.drawImage(tmp, 0, 0);
+        }
+
+        function setTool(t, b) { tool = t; document.querySelectorAll(".tool-btn").forEach(x=>x.classList.remove("active")); b.classList.add("active"); }
+        function undo() { undoStack.pop(); drawAll(); }
+        function save() {
+            window.opener.postMessage({ editedImage: canvas.toDataURL(), drawings: undoStack, index: ${index} }, "*");
+            window.close();
+        }
+    </script>
 </body>
 </html>
     `);
 }
+
 /* ============================================================
-   RÉCEPTION DE L’IMAGE MODIFIÉE
+   RÉCEPTION DE L'IMAGE
 ============================================================ */
 window.addEventListener("message", (event) => {
-    if (event.data.editedImage !== undefined) {
-        const { editedImage, index } = event.data;
+    if (event.data.editedImage) {
+        const { editedImage, drawings, index } = event.data;
+        photoList[index].current = editedImage;
+        photoList[index].drawings = drawings; // On sauvegarde les calques !
 
-        // Mise à jour dans photoList
-        photoList[index].data = editedImage;
+        const targetImg = photoPreviewContainer.children[index].querySelector("img");
+        if (targetImg) targetImg.src = editedImage;
+    }
+});
 
-        // Mise à jour de l’aperçu
-        photoPreviewContainer.children[index].querySelector("img").src = editedImage;
+/* ============================================================
+   FONCTIONS DE SYNCHRONISATION (IDENTITE / ADRESSE)
+============================================================ */
+function syncIdentite() {
+    const n = document.getElementById('nomCli').value;
+    const p = document.getElementById('prenomCli').value;
+    document.getElementById('nomTravaux').value = n;
+    document.getElementById('prenomTravaux').value = p;
+}
+
+function copyAdresseClient() {
+    document.getElementById('adresseTravaux').value = document.getElementById('adresseCli').value;
+    document.getElementById('complementAdrTravaux').value = document.getElementById('complementAdrCli').value;
+    document.getElementById('cpTravaux').value = document.getElementById('cpCli').value;
+    document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("raccordementForm");
+    const generatePDFBtn = document.getElementById("generatePDF");
+
+    let hasSignature = false;
+    
+    // Initialisation des canvases pour les signatures
+    const canvasRepresentant = setupSignatureCanvas("signature-representant-canvas", "clear-representant");
+
+    // --- LOGIQUE DE VALIDATION ---
+    form.addEventListener("submit", (event) => {
+        if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
+            event.preventDefault(); // Bloque l'envoi
+            alert("La signature est obligatoire et ne peut pas être vide.");
+        }
+    });
+
+    // Fonction pour vérifier si le canvas est réellement vide pixel par pixel
+    function isCanvasEmpty(canvas) {
+        const blank = document.createElement('canvas');
+        blank.width = canvas.width;
+        blank.height = canvas.height;
+        // On compare les images DataURL du canvas actuel et d'un canvas vierge
+        return canvas.toDataURL() === blank.toDataURL();
+    }
+    // ----------------------------
+
+    function setupSignatureCanvas(canvasId, clearButtonId) {
+        const canvas = document.getElementById(canvasId);
+        const context = canvas.getContext("2d");
+        let isDrawing = false;
+        
+        let tempCanvas = document.createElement("canvas");
+        let tempContext = tempCanvas.getContext("2d");
+
+        const synchronizeCanvasSize = () => {
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempContext.drawImage(canvas, 0, 0);
+
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            context.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+        };
+        
+        const getPosition = (event) => {
+            const rect = canvas.getBoundingClientRect();
+            if (event.touches && event.touches[0]) {
+                return {
+                    x: event.touches[0].clientX - rect.left,
+                    y: event.touches[0].clientY - rect.top
+                };
+            } else {
+                return {
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top
+                };
+            }
+        };
+
+        const startDrawing = (event) => {
+            event.preventDefault();
+            isDrawing = true;
+            // On ne passe pas hasSignature à true ici, on attend le mouvement (draw)
+            const pos = getPosition(event);
+            context.beginPath();
+            context.moveTo(pos.x, pos.y);
+        };
+
+        const draw = (event) => {
+            if (!isDrawing) return;
+            event.preventDefault();
+            hasSignature = true; // Capté lors du mouvement réel du stylet/doigt
+            const pos = getPosition(event);
+            context.lineTo(pos.x, pos.y);
+            context.stroke();
+        };
+
+        const stopDrawing = () => {
+            isDrawing = false;
+        };
+
+        synchronizeCanvasSize();
+        window.addEventListener("resize", synchronizeCanvasSize);
+
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseleave", stopDrawing);
+
+        canvas.addEventListener("touchstart", startDrawing);
+        canvas.addEventListener("touchmove", draw);
+        canvas.addEventListener("touchend", stopDrawing);
+        canvas.addEventListener("touchcancel", stopDrawing);
+
+        document.getElementById(clearButtonId).addEventListener("click", () => {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            hasSignature = false; 
+        });
+        
+        return canvas;
     }
 });
