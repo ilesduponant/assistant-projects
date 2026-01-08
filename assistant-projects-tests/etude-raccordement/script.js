@@ -321,7 +321,7 @@ async function genererPDF(data) {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ unit: 'cm' });
 
-        pdf.addImage("enteteImg.png", 'PNG', 1, 0, 11.67, 18.62);
+        pdf.addImage("enteteImg.png", 'PNG', 1, 0, 18.62,11.67);
         
         pdf.setFontSize(12);
         pdf.text(`Client : ${data.nomCli} ${data.prenomCli}`, 1, 20);
