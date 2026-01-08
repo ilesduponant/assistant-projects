@@ -25,16 +25,14 @@
 	<input type="text" id="prenomCli" maxlenght="64" required />
 	<label for="adresseCli">Adresse</label>
 	<input type="text" id="adresseCli" maxlenght="64" required />
-	<label for="complementAdrCli">Complément d'adresse</label>
-	<textarea id="complementAdrCli" rows="3"></textarea>
 	<label for="cpCli">Code postal</label>
 	<input type="integer" id="cpCli" maxlenght="5" required />
+	<label for="villeCli">Ville</label>
+        <input type="text" id="villeCli" oninput="this.value = this.value.toUpperCase()" required />
+	<label for="complementAdrCli">Complément d'adresse</label>
+	<textarea id="complementAdrCli" rows="3"></textarea>
 	<label for="noDossier">Numéro de dossier OSR</label>
 	<input type="integer" id="noDossier" maxlenght="64" required />
-
-	<label for="villeCli">Ville</label>
-<input type="text" id="villeCli" oninput="this.value = this.value.toUpperCase()" required />
-
 <hr />
 
 <h3>Coordonnées des travaux</h3>

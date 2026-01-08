@@ -279,6 +279,7 @@ window.copyAdresseClient = function() {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("V1.12...");
     const form = document.getElementById("raccordementForm");
     const generatePDFBtn = document.getElementById("generatePDF");
     let hasSignature = false;
@@ -321,6 +322,10 @@ document.addEventListener("DOMContentLoaded", () => {
             nomCli: document.getElementById("nomCli")?.value || "",
             prenomCli: document.getElementById("prenomCli")?.value || "",
             noDossier: document.getElementById("noDossier")?.value || "",
+            adresseCli: document.getElementById("adresseCli")?.value || "",
+	    complementAdrCli: document.getElementById("complementAdrCli")?.value || "",
+            cpCli: document.getElementById("cpCli")?.value || "",
+	    villeCli: document.getElementById("villeCli")?.value || "",
             signature: canvasRepresentant.toDataURL("image/png")
         };
 
@@ -339,22 +344,25 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) { console.warn(e); }
 
         pdf.setFontSize(12);
-        pdf.text(`Client : ${data.nomCli} ${data.prenomCli}`, 1, 14);
-        pdf.text(`Dossier : ${data.noDossier}`, 1, 15);
-        pdf.addImage(data.signature, "PNG", 1, 16, 5, 2.5);
+        pdf.text(`${data.nomCli} ${data.prenomCli}`, 10.5, 14, { align: "center" });
+	pdf.text(`${data.adresseCli}`, 10.5, 15, { align: "center"});
+	pdf.text(`${data.cpCli}`, 10.5, 16, { align: "center"});
+	pdf.text(`${data.villeCli}`, 10.5, 17, {align: "center"});
+	pdf.text(`Dossier : ${data.noDossier}`, 1, 18);
+        //pdf.addImage(data.signature, "PNG", 1, 16, 5, 2.5);
 
         // PAGE 2 : Consuel
         try {
             pdf.addPage();
             const consuelB64 = await imageToBase64("consuelImg.png");
-            pdf.addImage(consuelB64, 'PNG', 1, 0, 17.88, 24.63);
+            pdf.addImage(consuelB64, 'PNG', 1, 0, 18.37, 25.55);
         } catch (e) { console.warn(e); }
 
         // PAGE 3 : Compteur
         try {
             pdf.addPage();
             const compteurB64 = await imageToBase64("compteurImg.png");
-            pdf.addImage(compteurB64, 'PNG', 1, 0, 18.62, 11.67);
+            pdf.addImage(compteurB64, 'PNG', 1, 0, 17.88, 24.63);
         } catch (e) { console.warn(e); }
 
         pdf.save("intervention.pdf");
