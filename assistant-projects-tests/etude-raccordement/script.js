@@ -338,12 +338,12 @@ document.addEventListener("DOMContentLoaded", () => {
             // Utilisation de la fonction réutilisable pour l'entête
             const enteteBase64 = await imageToBase64("enteteImg.png");
             pdf.addImage(enteteBase64, 'PNG', 1, 0, 18.62, 11.67);
-	    pdf.setPage(2)
-	    const enteteBase64 = await imageToBase64("consuelImg.png");
-            pdf.addImage(enteteBase64, 'PNG', 1, 0, 18.62, 11.67);
-	    pdf.setPage(3)
-	    const enteteBase64 = await imageToBase64("compteurImg.png");
-            pdf.addImage(enteteBase64, 'PNG', 1, 0, 18.62, 11.67);
+	    pdf.setPage(2);
+	    const consuelB64 = await imageToBase64("consuelImg.png");
+            pdf.addImage(consuelB64, 'PNG', 1, 0, 18.62, 11.67);
+	    pdf.setPage(3);
+	    const compteurB64 = await imageToBase64("compteurImg.png");
+            pdf.addImage(compteurB64, 'PNG', 1, 0, 18.62, 11.67);
 
             
             // Si tu as une autre image, tu fais pareil :
