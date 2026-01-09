@@ -278,14 +278,17 @@ window.copyAdresseClient = function() {
     document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
 };
 
+// --- Garde vos variables et gestion caméra/upload intactes au début ---
+
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("V1.12...");
+    console.log("V1.13.2...");
     const form = document.getElementById("raccordementForm");
     const generatePDFBtn = document.getElementById("generatePDF");
     let hasSignature = false;
 
     const canvasRepresentant = setupSignatureCanvas("signature-representant-canvas", "clear-representant");
 
+    // Fonctions utilitaires existantes
     function isCanvasEmpty(canvas) {
         const blank = document.createElement('canvas');
         blank.width = canvas.width;
@@ -310,6 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    // --- EVENEMENT CLIC GENERER PDF ---
     generatePDFBtn.addEventListener("click", async (event) => {
         event.preventDefault();
 
@@ -323,9 +327,15 @@ document.addEventListener("DOMContentLoaded", () => {
             prenomCli: document.getElementById("prenomCli")?.value || "",
             noDossier: document.getElementById("noDossier")?.value || "",
             adresseCli: document.getElementById("adresseCli")?.value || "",
-	    complementAdrCli: document.getElementById("complementAdrCli")?.value || "",
             cpCli: document.getElementById("cpCli")?.value || "",
-	    villeCli: document.getElementById("villeCli")?.value || "",
+            villeCli: document.getElementById("villeCli")?.value || "",
+            noPoste: document.getElementById("noPoste")?.value || "",
+            noDipole: document.getElementById("noDipole")?.value || "", // Ajouté car utilisé en page 2
+            dteSouhaitee: document.getElementById("dteSouhaitee")?.value || "",
+            photos: photoList.map(p => ({
+                src: p.current,
+                label: p.label || "Sans titre" // Correction ici : p.label est déjà la valeur
+            })),
             signature: canvasRepresentant.toDataURL("image/png")
         };
 
@@ -336,95 +346,232 @@ document.addEventListener("DOMContentLoaded", () => {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ unit: 'cm' });
 
-        // PAGE 1 : Entête et Infos
+        // --- PAGE 1 ---
         try {
             const enteteBase64 = await imageToBase64("enteteImg.png");
-	    //nom fichier/var, type, offset W, offset H, W, H (cm)
-            pdf.addImage(enteteBase64, 'PNG', 1, 0, 18.62, 11.67);
+            pdf.addImage(enteteBase64, 'PNG', 1, 0.2, 18.62, 11.67);
         } catch (e) { console.warn(e); }
 
         pdf.setFontSize(12);
         pdf.text(`${data.nomCli} ${data.prenomCli}`, 10.5, 14, { align: "center" });
-	pdf.text(`${data.adresseCli}`, 10.5, 15, { align: "center"});
-	pdf.text(`${data.cpCli}`, 10.5, 16, { align: "center"});
-	pdf.text(`${data.villeCli}`, 10.5, 17, {align: "center"});
-	pdf.text(`Dossier : ${data.noDossier}`, 1, 18);
-        //pdf.addImage(data.signature, "PNG", 1, 16, 5, 2.5);
+        pdf.text(`${data.adresseCli}`, 10.5, 15, { align: "center"});
+        pdf.text(`${data.cpCli} ${data.villeCli}`, 10.5, 16, { align: "center"});
+        pdf.text(`Dossier : ${data.noDossier}`, 10.5, 18, {align: "center"});
 
-        // PAGE 2 : Consuel
+        // --- PAGE 2 : ETUDE ET 1ERE PHOTO ---
+        pdf.addPage();
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.1);
+        pdf.rect(0.7, 0.5, 19.6, 28.5, 'S'); // Cadre général
+
+        // Bandeau bleu du haut
+        pdf.setFillColor(210, 230, 255);
+        pdf.rect(0.7, 1.5, 19.6, 3.5, 'F');
+        pdf.line(0.7, 1.5, 20.3, 1.5);
+        pdf.line(0.7, 5, 20.3, 5);
+
+        pdf.setFontSize(12);
+        pdf.text("ETUDE DE VOTRE BRANCHEMENT ELECTRIQUE", 10.5, 1, {align: "center"});
+        pdf.text("Coordonnées des travaux", 1, 2);
+        pdf.setFontSize(10);
+        pdf.text(`Nom : ${data.nomCli} ${data.prenomCli}`, 2, 2.5);
+        pdf.text(`Adresse des travaux : ${data.adresseCli}`, 2, 3);
+        pdf.text(`Commune : ${data.villeCli}`, 2, 3.5);
+        pdf.text(`Nom et n° du POSTE : ${data.noPoste}`, 2, 4.2);
+        pdf.text(`N° DIPOLE : ${data.noDipole}`, 10.5, 4.2);
+        pdf.text(`Date souhaitée : ${data.dteSouhaitee}`, 2, 4.7);
+
+        // Rectangle bleu "Branchement..."
+        pdf.setFillColor(210, 230, 255);
+        pdf.rect(1.5, 5.5, 18, 1, 'FD');
+        pdf.text(`Branchement ${data.nomCli}`, 10.5, 6.1, {align: "center"});
+
+        // Ajout de la 1ère photo sur cette Page 2
+        if (data.photos && data.photos.length > 0) {
+            ajouterUnePhoto(pdf, data.photos[0], 7.5, 13); // yPos=7.5, hauteurMax=13
+        }
+
+        // --- PAGES SUIVANTES : PHOTOS RESTANTES (2 PAR PAGE) ---
+        if (data.photos && data.photos.length > 1) {
+            for (let i = 1; i < data.photos.length; i += 2) {
+                pdf.addPage();
+                pdf.rect(0.7, 0.5, 19.6, 28.5, 'S');
+                pdf.line(0.7, 1.5, 20.3, 1.5);
+                pdf.setFontSize(10);
+                pdf.text("PHOTOS DE L'INTERVENTION (SUITE)", 10.5, 1.1, { align: "center" });
+
+                // Photo A (Haut)
+                ajouterUnePhoto(pdf, data.photos[i], 2, 10);
+
+                // Photo B (Bas)
+                if (data.photos[i + 1]) {
+                    ajouterUnePhoto(pdf, data.photos[i + 1], 15, 10);
+                }
+            }
+        }
+
+        // --- PAGE TECHNIQUE VIDE (Ancienne Page 3) ---
+        pdf.addPage();
+        pdf.rect(0.7, 0.5, 19.6, 27.4, 'S');
+
+        // --- PAGES ANNEXES ---
         try {
             pdf.addPage();
             const consuelB64 = await imageToBase64("consuelImg.png");
-            pdf.addImage(consuelB64, 'PNG', 1, 0, 18.37, 25.55);
+            pdf.addImage(consuelB64, 'PNG', 1, 1, 19, 27); // Ajusté pour meilleure visibilité
         } catch (e) { console.warn(e); }
 
-        // PAGE 3 : Compteur
         try {
             pdf.addPage();
             const compteurB64 = await imageToBase64("compteurImg.png");
-            pdf.addImage(compteurB64, 'PNG', 1, 0, 17.88, 24.63);
+            pdf.addImage(compteurB64, 'PNG', 1, 1, 19, 27);
         } catch (e) { console.warn(e); }
 
-        pdf.save("intervention.pdf");
+        pdf.save(`intervention_${data.nomCli}.pdf`);
     }
 
+    // --- FONCTION SIGNATURE (Garde votre code setupSignatureCanvas) ---
     function setupSignatureCanvas(canvasId, clearButtonId) {
+
         const canvas = document.getElementById(canvasId);
+
         const context = canvas.getContext("2d");
+
         let isDrawing = false;
+
         let tempCanvas = document.createElement("canvas");
+
         let tempContext = tempCanvas.getContext("2d");
 
+
+
         const synchronizeCanvasSize = () => {
+
             tempCanvas.width = canvas.width;
+
             tempCanvas.height = canvas.height;
+
             tempContext.drawImage(canvas, 0, 0);
+
             const rect = canvas.getBoundingClientRect();
+
             canvas.width = rect.width;
+
             canvas.height = rect.height;
+
             context.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+
         };
+
+
 
         const getPosition = (event) => {
+
             const rect = canvas.getBoundingClientRect();
+
             const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+
             const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
             return { x: clientX - rect.left, y: clientY - rect.top };
+
         };
+
+
 
         const startDrawing = (event) => {
+
             event.preventDefault();
+
             isDrawing = true;
+
             const pos = getPosition(event);
+
             context.beginPath();
+
             context.moveTo(pos.x, pos.y);
+
         };
 
+
+
         const draw = (event) => {
+
             if (!isDrawing) return;
+
             event.preventDefault();
+
             hasSignature = true;
+
             const pos = getPosition(event);
+
             context.lineTo(pos.x, pos.y);
+
             context.stroke();
+
         };
+
+
 
         const stopDrawing = () => { isDrawing = false; };
 
+
+
         synchronizeCanvasSize();
+
         window.addEventListener("resize", synchronizeCanvasSize);
+
         canvas.addEventListener("mousedown", startDrawing);
+
         canvas.addEventListener("mousemove", draw);
+
         window.addEventListener("mouseup", stopDrawing);
+
         canvas.addEventListener("touchstart", startDrawing);
+
         canvas.addEventListener("touchmove", draw);
+
         canvas.addEventListener("touchend", stopDrawing);
 
+
+
         document.getElementById(clearButtonId).addEventListener("click", () => {
+
             context.clearRect(0, 0, canvas.width, canvas.height);
+
             hasSignature = false; 
+
         });
+
         
+
         return canvas;
+
     }
+
+    
 });
+
+// --- FONCTION AJOUTER PHOTO UNIFIÉE ---
+function ajouterUnePhoto(pdf, photo, yPos, hauteurMax = 10) {
+    try {
+        const props = pdf.getImageProperties(photo.src);
+        const ratio = Math.min(17 / props.width, hauteurMax / props.height);
+        const finalW = props.width * ratio;
+        const finalH = props.height * ratio;
+        const xCentré = (21 - finalW) / 2;
+
+        // Image centrée
+        pdf.addImage(photo.src, 'PNG', xCentré, yPos, finalW, finalH, undefined, 'FAST');
+        
+        // Bandeau Libellé sous l'image
+        const yBandeau = yPos + finalH + 0.2;
+        pdf.setFillColor(210, 230, 255);
+        pdf.setDrawColor(0,0,0);
+        pdf.rect(0.7, yBandeau, 19.6, 0.8, 'F');
+        
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+        pdf.text(photo.label || "Sans libellé", 10.5, yBandeau + 0.5, { align: "center" });
+    } catch (e) { console.warn("Erreur ajout photo PDF:", e); }
+}
