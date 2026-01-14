@@ -1,0 +1,14 @@
+# Swap files de Vim
+*~
+*.un~
+*.swp
+
+# Environnement Python
+.env
+__pycache__/
+venv/
+.venv/
+
+# Dossiers système
+.DS_Store
+Thumbs.db
