@@ -1,0 +1,76 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: #fff;
+}
+
+/* Conteneur principal */
+main.editeur {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* Toolbar */
+#toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: #f4f4f9;
+    border-bottom: 1px solid #ddd;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+/* Boutons */
+#toolbar button {
+    flex: 1 1 45%;
+    min-width: 120px;
+    padding: 14px;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#toolbar button:hover {
+    background-color: #0069d9;
+    transform: scale(1.03);
+    transition: 0.1s ease;
+}
+
+/* Inputs */
+#toolbar input[type="color"],
+#toolbar input[type="range"] {
+    flex: 1 1 45%;
+    min-width: 120px;
+}
+
+/* Conteneur du canvas */
+#canvas-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #eee; /* optionnel */
+}
+
+/* Canvas */
+#canvas {
+    display: block;
+    touch-action: none;
+}
+
