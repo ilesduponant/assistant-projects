@@ -278,17 +278,78 @@ window.copyAdresseClient = function() {
     document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
 };
 
-// --- Garde vos variables et gestion caméra/upload intactes au début ---
+
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("V1.13.2...");
+    console.log("V1.13.3...");
     const form = document.getElementById("raccordementForm");
     const generatePDFBtn = document.getElementById("generatePDF");
     let hasSignature = false;
 
+    // Définition de la fonction de signature AVANT de l'appeler
+    function setupSignatureCanvas(canvasId, clearButtonId) {
+        const canvas = document.getElementById(canvasId);
+        const context = canvas.getContext("2d");
+        let isDrawing = false;
+        let tempCanvas = document.createElement("canvas");
+        let tempContext = tempCanvas.getContext("2d");
+
+        const synchronizeCanvasSize = () => {
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempContext.drawImage(canvas, 0, 0);
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            context.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+        };
+
+        const getPosition = (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+            const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        };
+
+        const startDrawing = (event) => {
+            event.preventDefault();
+            isDrawing = true;
+            const pos = getPosition(event);
+            context.beginPath();
+            context.moveTo(pos.x, pos.y);
+        };
+
+        const draw = (event) => {
+            if (!isDrawing) return;
+            event.preventDefault();
+            hasSignature = true;
+            const pos = getPosition(event);
+            context.lineTo(pos.x, pos.y);
+            context.stroke();
+        };
+
+        const stopDrawing = () => { isDrawing = false; };
+
+        synchronizeCanvasSize();
+        window.addEventListener("resize", synchronizeCanvasSize);
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        window.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("touchstart", startDrawing);
+        canvas.addEventListener("touchmove", draw);
+        canvas.addEventListener("touchend", stopDrawing);
+
+        document.getElementById(clearButtonId).addEventListener("click", () => {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            hasSignature = false; 
+        });
+        
+        return canvas;
+    }
+
+    // Initialisation du canvas
     const canvasRepresentant = setupSignatureCanvas("signature-representant-canvas", "clear-representant");
 
-    // Fonctions utilitaires existantes
     function isCanvasEmpty(canvas) {
         const blank = document.createElement('canvas');
         blank.width = canvas.width;
@@ -313,12 +374,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    // --- EVENEMENT CLIC GENERER PDF ---
     generatePDFBtn.addEventListener("click", async (event) => {
         event.preventDefault();
-
         if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
-            alert("⚠️ La signature est obligatoire avant de générer le PDF !");
+            alert("⚠️ La signature est obligatoire !");
             return;
         }
 
@@ -330,15 +389,14 @@ document.addEventListener("DOMContentLoaded", () => {
             cpCli: document.getElementById("cpCli")?.value || "",
             villeCli: document.getElementById("villeCli")?.value || "",
             noPoste: document.getElementById("noPoste")?.value || "",
-            noDipole: document.getElementById("noDipole")?.value || "", // Ajouté car utilisé en page 2
+            noDipole: document.getElementById("noDipole")?.value || "",
             dteSouhaitee: document.getElementById("dteSouhaitee")?.value || "",
             photos: photoList.map(p => ({
                 src: p.current,
-                label: p.label || "Sans titre" // Correction ici : p.label est déjà la valeur
+                label: p.label || "Sans titre"
             })),
             signature: canvasRepresentant.toDataURL("image/png")
         };
-
         await genererPDF(data);
     });
 
@@ -358,13 +416,12 @@ document.addEventListener("DOMContentLoaded", () => {
         pdf.text(`${data.cpCli} ${data.villeCli}`, 10.5, 16, { align: "center"});
         pdf.text(`Dossier : ${data.noDossier}`, 10.5, 18, {align: "center"});
 
-        // --- PAGE 2 : ETUDE ET 1ERE PHOTO ---
+        // --- PAGE 2 ---
         pdf.addPage();
         pdf.setDrawColor(0, 0, 0);
         pdf.setLineWidth(0.1);
-        pdf.rect(0.7, 0.5, 19.6, 28.5, 'S'); // Cadre général
+        pdf.rect(0.7, 0.5, 19.6, 28.5, 'S'); 
 
-        // Bandeau bleu du haut
         pdf.setFillColor(210, 230, 255);
         pdf.rect(0.7, 1.5, 19.6, 3.5, 'F');
         pdf.line(0.7, 1.5, 20.3, 1.5);
@@ -381,178 +438,155 @@ document.addEventListener("DOMContentLoaded", () => {
         pdf.text(`N° DIPOLE : ${data.noDipole}`, 10.5, 4.2);
         pdf.text(`Date souhaitée : ${data.dteSouhaitee}`, 2, 4.7);
 
-        // Rectangle bleu "Branchement..."
         pdf.setFillColor(210, 230, 255);
         pdf.rect(1.5, 5.5, 18, 1, 'FD');
         pdf.text(`Branchement ${data.nomCli}`, 10.5, 6.1, {align: "center"});
 
-        // Ajout de la 1ère photo sur cette Page 2
         if (data.photos && data.photos.length > 0) {
-            ajouterUnePhoto(pdf, data.photos[0], 7.5, 13); // yPos=7.5, hauteurMax=13
+            ajouterUnePhoto(pdf, data.photos[0], 7.5, 13);
         }
 
-        // --- PAGES SUIVANTES : PHOTOS RESTANTES (2 PAR PAGE) ---
+        // --- PAGES PHOTOS SUIVANTES ---
         if (data.photos && data.photos.length > 1) {
             for (let i = 1; i < data.photos.length; i += 2) {
                 pdf.addPage();
                 pdf.rect(0.7, 0.5, 19.6, 28.5, 'S');
                 pdf.line(0.7, 1.5, 20.3, 1.5);
-                pdf.setFontSize(10);
                 pdf.text("PHOTOS DE L'INTERVENTION (SUITE)", 10.5, 1.1, { align: "center" });
-
-                // Photo A (Haut)
                 ajouterUnePhoto(pdf, data.photos[i], 2, 10);
-
-                // Photo B (Bas)
                 if (data.photos[i + 1]) {
                     ajouterUnePhoto(pdf, data.photos[i + 1], 15, 10);
                 }
             }
         }
 
-        // --- PAGE TECHNIQUE VIDE (Ancienne Page 3) ---
+        // --- PAGE VIDE TECHNIQUE ---
         pdf.addPage();
         pdf.rect(0.7, 0.5, 19.6, 27.4, 'S');
 
-        // --- PAGES ANNEXES ---
-        try {
-            pdf.addPage();
-            const consuelB64 = await imageToBase64("consuelImg.png");
-            pdf.addImage(consuelB64, 'PNG', 1, 1, 19, 27); // Ajusté pour meilleure visibilité
-        } catch (e) { console.warn(e); }
-
-        try {
-            pdf.addPage();
-            const compteurB64 = await imageToBase64("compteurImg.png");
-            pdf.addImage(compteurB64, 'PNG', 1, 1, 19, 27);
-        } catch (e) { console.warn(e); }
+        // --- ANNEXES ---
+        const annexes = ["consuelImg.png", "compteurImg.png"];
+        for (const imgName of annexes) {
+            try {
+                pdf.addPage();
+                const b64 = await imageToBase64(imgName);
+                pdf.addImage(b64, 'PNG', 1, 1, 19, 27);
+            } catch (e) { console.warn(e); }
+        }
 
         pdf.save(`intervention_${data.nomCli}.pdf`);
     }
-
-    // --- FONCTION SIGNATURE (Garde votre code setupSignatureCanvas) ---
-    function setupSignatureCanvas(canvasId, clearButtonId) {
-
-        const canvas = document.getElementById(canvasId);
-
-        const context = canvas.getContext("2d");
-
-        let isDrawing = false;
-
-        let tempCanvas = document.createElement("canvas");
-
-        let tempContext = tempCanvas.getContext("2d");
-
-
-
-        const synchronizeCanvasSize = () => {
-
-            tempCanvas.width = canvas.width;
-
-            tempCanvas.height = canvas.height;
-
-            tempContext.drawImage(canvas, 0, 0);
-
-            const rect = canvas.getBoundingClientRect();
-
-            canvas.width = rect.width;
-
-            canvas.height = rect.height;
-
-            context.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
-
-        };
-
-
-
-        const getPosition = (event) => {
-
-            const rect = canvas.getBoundingClientRect();
-
-            const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-
-            const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-
-            return { x: clientX - rect.left, y: clientY - rect.top };
-
-        };
-
-
-
-        const startDrawing = (event) => {
-
-            event.preventDefault();
-
-            isDrawing = true;
-
-            const pos = getPosition(event);
-
-            context.beginPath();
-
-            context.moveTo(pos.x, pos.y);
-
-        };
-
-
-
-        const draw = (event) => {
-
-            if (!isDrawing) return;
-
-            event.preventDefault();
-
-            hasSignature = true;
-
-            const pos = getPosition(event);
-
-            context.lineTo(pos.x, pos.y);
-
-            context.stroke();
-
-        };
-
-
-
-        const stopDrawing = () => { isDrawing = false; };
-
-
-
-        synchronizeCanvasSize();
-
-        window.addEventListener("resize", synchronizeCanvasSize);
-
-        canvas.addEventListener("mousedown", startDrawing);
-
-        canvas.addEventListener("mousemove", draw);
-
-        window.addEventListener("mouseup", stopDrawing);
-
-        canvas.addEventListener("touchstart", startDrawing);
-
-        canvas.addEventListener("touchmove", draw);
-
-        canvas.addEventListener("touchend", stopDrawing);
-
-
-
-        document.getElementById(clearButtonId).addEventListener("click", () => {
-
-            context.clearRect(0, 0, canvas.width, canvas.height);
-
-            hasSignature = false; 
-
-        });
-
-        
-
-        return canvas;
-
-    }
-
-    
 });
 
-// --- FONCTION AJOUTER PHOTO UNIFIÉE ---
+// Fonction globale pour ajouter les photos
+// --- FONCTION APERÇU AVEC CAPTURE GPS ---
+function addPhotoToPreview(photoData) {
+    const photoObject = {
+        original: photoData,
+        current: photoData,
+        drawings: [],
+        label: "",
+        gps: "" // Stockage des coordonnées
+    };
+
+    const photoContainer = document.createElement("div");
+    photoContainer.style.display = "inline-block";
+    photoContainer.style.margin = "10px";
+    photoContainer.style.position = "relative";
+    photoContainer.style.width = "120px";
+    photoContainer.style.verticalAlign = "top";
+
+    const img = document.createElement("img");
+    img.src = photoObject.current;
+    img.style.width = "100%";
+    img.style.border = "1px solid #ccc";
+    photoContainer.appendChild(img);
+
+    // --- ZONE GPS ---
+    const gpsInfo = document.createElement("div");
+    gpsInfo.style.fontSize = "9px";
+    gpsInfo.style.color = "#666";
+    gpsInfo.style.textAlign = "center";
+    gpsInfo.textContent = "GPS : Non fixé";
+    photoContainer.appendChild(gpsInfo);
+
+    const gpsBtn = document.createElement("button");
+    gpsBtn.type = "button";
+    gpsBtn.textContent = "Fixer GPS";
+    gpsBtn.style.width = "100%";
+    gpsBtn.style.fontSize = "10px";
+    gpsBtn.style.backgroundColor = "#ffc107";
+    gpsBtn.onclick = () => {
+        if (!navigator.geolocation) return alert("GPS non supporté");
+        
+        gpsInfo.textContent = "Recherche...";
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lon = pos.coords.longitude.toFixed(6);
+            photoObject.gps = `Lat: ${lat}, Lon: ${lon}`;
+            gpsInfo.textContent = photoObject.gps;
+            gpsBtn.style.backgroundColor = "#28a745";
+            gpsBtn.style.color = "white";
+            gpsBtn.textContent = "Position fixée";
+        }, (err) => {
+            gpsInfo.textContent = "Erreur GPS";
+            console.error(err);
+        }, { enableHighAccuracy: true });
+    };
+    photoContainer.appendChild(gpsBtn);
+
+    // --- LIBELLÉ ---
+    const labelInp = document.createElement("input");
+    labelInp.type = "text";
+    labelInp.placeholder = "Libellé...";
+    labelInp.style.width = "100%";
+    labelInp.oninput = () => { photoObject.label = labelInp.value; };
+    photoContainer.appendChild(labelInp);
+
+    // --- BOUTONS ÉDITION / SUPPRESSION ---
+    const btnGroup = document.createElement("div");
+    btnGroup.style.display = "flex";
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "✎";
+    editBtn.style.flex = "1";
+    editBtn.onclick = () => {
+        const idx = photoList.indexOf(photoObject);
+        openEditorInNewTab(photoObject.original, idx, photoObject.drawings);
+    };
+
+    const deleteButton = document.createElement("button");
+    deleteButton.innerHTML = "🗑";
+    deleteButton.style.flex = "1";
+    deleteButton.style.color = "red";
+    deleteButton.onclick = () => {
+        photoPreviewContainer.removeChild(photoContainer);
+        photoList = photoList.filter((p) => p !== photoObject);
+    };
+
+    btnGroup.appendChild(editBtn);
+    btnGroup.appendChild(deleteButton);
+    photoContainer.appendChild(btnGroup);
+
+    photoPreviewContainer.appendChild(photoContainer);
+    photoList.push(photoObject);
+}
+
+// --- MAPPING DES DONNÉES AVANT GÉNÉRATION ---
+// (À insérer dans votre event listener generatePDFBtn)
+/*
+const data = {
+    ...
+    photos: photoList.map(p => ({
+        src: p.current,
+        label: p.label || "Sans libellé",
+        gps: p.gps || "Non renseigné"
+    })),
+    ...
+};
+*/
+
+// --- FONCTION PDF MISE À JOUR ---
 function ajouterUnePhoto(pdf, photo, yPos, hauteurMax = 10) {
     try {
         const props = pdf.getImageProperties(photo.src);
@@ -561,17 +595,26 @@ function ajouterUnePhoto(pdf, photo, yPos, hauteurMax = 10) {
         const finalH = props.height * ratio;
         const xCentré = (21 - finalW) / 2;
 
-        // Image centrée
         pdf.addImage(photo.src, 'PNG', xCentré, yPos, finalW, finalH, undefined, 'FAST');
         
-        // Bandeau Libellé sous l'image
+        // Bandeau d'information (plus grand pour 2 lignes)
         const yBandeau = yPos + finalH + 0.2;
         pdf.setFillColor(210, 230, 255);
-        pdf.setDrawColor(0,0,0);
-        pdf.rect(0.7, yBandeau, 19.6, 0.8, 'F');
+        pdf.rect(0.7, yBandeau, 19.6, 1.2, 'F'); 
         
+        // Ligne 1 : Libellé
         pdf.setTextColor(0, 0, 0);
         pdf.setFontSize(10);
-        pdf.text(photo.label || "Sans libellé", 10.5, yBandeau + 0.5, { align: "center" });
-    } catch (e) { console.warn("Erreur ajout photo PDF:", e); }
+        pdf.setFont(undefined, 'bold');
+        pdf.text(photo.label, 10.5, yBandeau + 0.4, { align: "center" });
+        
+        // Ligne 2 : Coordonnées GPS
+        pdf.setFontSize(8);
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(60, 60, 60);
+        pdf.text(`Coordonnées GPS : ${photo.gps}`, 10.5, yBandeau + 0.9, { align: "center" });
+        
+    } catch (e) { 
+        console.warn("Erreur image PDF :", e); 
+    }
 }
