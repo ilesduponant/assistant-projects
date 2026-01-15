@@ -216,27 +216,27 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- GENERATION PDF & ENVOI ---
 document.getElementById("generatePDF").onclick = async (e) => {
     e.preventDefault();
+    if (!hasSignature) return alert("⚠️ Signature obligatoire !");
+
     const btn = e.target;
     btn.disabled = true;
+    btn.textContent = "⌛ Traitement...";
 
-    // Fonction interne pour logger la RAM (Chrome uniquement)
-    const logRAM = (step) => {
-        if (performance.memory) {
-            const usedRAM = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
-            console.log(`[${step}] 💾 RAM : ${usedRAM} Mo / Limite : ${Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)} Mo`);
-        } else {
-            console.log(`[${step}] ℹ️ RAM : Non dispo sur ce navigateur`);
-        }
+    const data = {
+        nomCli: document.getElementById("nomCli").value,
+        prenomCli: document.getElementById("prenomCli").value,
+        noDossier: document.getElementById("noDossier").value,
+        adresseCli: document.getElementById("adresseCli").value,
+        cpCli: document.getElementById("cpCli").value,
+        villeCli: document.getElementById("villeCli").value,
+        signature: document.getElementById("signature-representant-canvas").toDataURL(),
+        photos: photoList
     };
 
     try {
-        console.time("Performance_Globale");
-        logRAM("Démarrage");
+        await genererPDF(data);
 
-        // --- Création du ZIP ---
-        btn.textContent = "⌛ ZIP en cours...";
-        const zip = new JSZip();
- const htmlContent = `
+	const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -276,55 +276,44 @@ document.getElementById("generatePDF").onclick = async (e) => {
     </script>
 </body>
 </html>`;
-	
-        zip.file("CONSULTATION.html", htmlContent); // (Assure-toi que htmlContent est défini)
-        
+        const htmlTemplate = generateHTMLReport(rapportData);
+        const zip = new JSZip();
+	zip.file("CONSULTATION.html", htmlTemplate);
         data.photos.forEach((p, i) => {
             const base64Content = p.current.split(',')[1];
             zip.file(`photo_${i}.png`, base64Content, {base64: true});
         });
-        logRAM("Fichiers ajoutés au ZIP");
-
-        // --- Encodage (Le moment où la RAM explose) ---
-        btn.textContent = "⌛ Encodage b64...";
-        console.time("Chrono_Encodage");
         const base64Zip = await zip.generateAsync({type: "base64"});
-        console.timeEnd("Chrono_Encodage");
         
-        const sizeInMo = (base64Zip.length * 0.75 / 1024 / 1024).toFixed(2); // Taille réelle estimée
-        const payloadSize = (base64Zip.length / 1024 / 1024).toFixed(2); // Taille b64 (celle de Vercel)
-        console.log(`📦 Taille ZIP réel : ${sizeInMo} Mo`);
-        console.log(`📤 Taille Requête (Payload) : ${payloadSize} Mo`);
-        logRAM("Après encodage");
-
-        if (payloadSize > 4.5) {
-            console.warn("⚠️ ALERTE : Le payload dépasse les 4.5 Mo de Vercel !");
-        }
-
-        // --- Envoi ---
-        btn.textContent = "⌛ Envoi Vercel...";
-        const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nom_client: `${data.nomCli} ${data.prenomCli}`,
-                no_dossier: data.noDossier,
-                zip_data: base64Zip 
-            })
-        });
-
-        if (response.ok) alert("✅ Succès !");
-        else alert(`❌ Échec (Statut: ${response.status})`);
-
+        const reader = new FileReader();
+        reader.readAsDataURL(zipBlob);
+        reader.onloadend = async () => {
+            const base64Zip = reader.result.split(',')[1];
+            try {
+                const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        nom_client: `${data.nomCli} ${data.prenomCli}`,
+        no_dossier: data.noDossier,
+        zip_data: base64Zip // On utilise directement la chaîne produite
+    })
+});                if (response.ok) alert("✅ Envoyé !");
+                else alert("❌ Erreur d'envoi");
+            } catch (err) {
+                alert("❌ Erreur réseau");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Générer PDF & Envoyer";
+            }
+        };
     } catch (err) {
-        console.error("❌ Crash :", err);
-        alert("Erreur critique, vérifie la console.");
-    } finally {
-        console.timeEnd("Performance_Globale");
+        alert("Erreur : " + err.message);
         btn.disabled = false;
         btn.textContent = "Générer PDF & Envoyer";
     }
 };
+
 // --- LOGIQUE PDF ---
 async function genererPDF(data) {
     const { jsPDF } = window.jspdf;
