@@ -263,7 +263,12 @@ if (response.ok) {
     alert("✅ Rapport envoyé avec succès !");
 } else {
     alert("❌ Erreur lors de l'envoi");
-}
+}catch (err) {
+                alert("❌ Erreur réseau");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Générer PDF & Envoyer";
+            }
         };
     } catch (err) {
         alert("Erreur : " + err.message);
