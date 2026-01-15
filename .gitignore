@@ -12,3 +12,4 @@ venv/
 # Dossiers système
 .DS_Store
 Thumbs.db
+Key_test.txt
