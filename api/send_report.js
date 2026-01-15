@@ -23,7 +23,7 @@ export default async function handler(req, res) {
         // 3. Envoi via Resend
         const data = await resend.emails.send({
             from: 'Assistant Projets <onboarding@resend.dev>', // Ou ton domaine vérifié
-            to: ['ton-email@exemple.com'], // Ton adresse de réception
+            to: ['eryuv1829@gmail.com'], // Ton adresse de réception
             subject: `Rapport : ${nom_client} - Dossier ${no_dossier}`,
             html: `<p>Nouveau rapport d'intervention pour <strong>${nom_client}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
             attachments: [
