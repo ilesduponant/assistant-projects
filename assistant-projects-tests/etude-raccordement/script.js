@@ -222,6 +222,7 @@ document.getElementById("generatePDF").onclick = async (e) => {
     btn.disabled = true;
     btn.textContent = "⌛ Traitement...";
 
+    // 1. Collecte des données
     const data = {
         nomCli: document.getElementById("nomCli").value,
         prenomCli: document.getElementById("prenomCli").value,
@@ -234,9 +235,14 @@ document.getElementById("generatePDF").onclick = async (e) => {
     };
 
     try {
+        // 2. Lancement du PDF (optionnel si tu envoies le ZIP)
         await genererPDF(data);
 
-	const htmlContent = `
+        // 3. INITIALISATION DU ZIP (Indispensable avant le reste)
+        const zip = new JSZip();
+
+        // 4. Préparation du HTML
+        const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -276,43 +282,44 @@ document.getElementById("generatePDF").onclick = async (e) => {
     </script>
 </body>
 </html>`;
-        zip.file("CONSULTATION.html", htmlContent); 
-        const zip = new JSZip();
+
+        // 5. AJOUT DES FICHIERS AU ZIP
+        zip.file("CONSULTATION.html", htmlContent);
+        
         data.photos.forEach((p, i) => {
             const base64Content = p.current.split(',')[1];
             zip.file(`photo_${i}.png`, base64Content, {base64: true});
         });
+
+        // 6. GÉNÉRATION DU ZIP (Directement en base64 pour éviter le FileReader)
         const base64Zip = await zip.generateAsync({type: "base64"});
-        
-        const reader = new FileReader();
-        reader.readAsDataURL(zipBlob);
-        reader.onloadend = async () => {
-            const base64Zip = reader.result.split(',')[1];
-            try {
-                const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        nom_client: `${data.nomCli} ${data.prenomCli}`,
-        no_dossier: data.noDossier,
-        zip_data: base64Zip // On utilise directement la chaîne produite
-    })
-});                if (response.ok) alert("✅ Envoyé !");
-                else alert("❌ Erreur d'envoi");
-            } catch (err) {
-                alert("❌ Erreur réseau");
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Générer PDF & Envoyer";
-            }
-        };
+
+        // 7. ENVOI À L'API
+        const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nom_client: `${data.nomCli} ${data.prenomCli}`,
+                no_dossier: data.noDossier,
+                zip_data: base64Zip 
+            })
+        });
+
+        if (response.ok) {
+            alert("✅ Rapport et photos envoyés !");
+        } else {
+            alert("❌ Erreur lors de l'envoi.");
+        }
+
     } catch (err) {
-        alert("Erreur : " + err.message);
+        console.error(err);
+        alert("❌ Erreur : " + err.message);
+    } finally {
+        // 8. RÉINITIALISATION DU BOUTON
         btn.disabled = false;
         btn.textContent = "Générer PDF & Envoyer";
     }
 };
-
 // --- LOGIQUE PDF ---
 async function genererPDF(data) {
     const { jsPDF } = window.jspdf;
