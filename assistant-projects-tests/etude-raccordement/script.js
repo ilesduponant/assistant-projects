@@ -216,33 +216,27 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- GENERATION PDF & ENVOI ---
 document.getElementById("generatePDF").onclick = async (e) => {
     e.preventDefault();
-    if (!hasSignature) return alert("⚠️ Signature obligatoire !");
-
     const btn = e.target;
     btn.disabled = true;
-    btn.textContent = "⌛ Traitement...";
 
-    // 1. Collecte des données
-    const data = {
-        nomCli: document.getElementById("nomCli").value,
-        prenomCli: document.getElementById("prenomCli").value,
-        noDossier: document.getElementById("noDossier").value,
-        adresseCli: document.getElementById("adresseCli").value,
-        cpCli: document.getElementById("cpCli").value,
-        villeCli: document.getElementById("villeCli").value,
-        signature: document.getElementById("signature-representant-canvas").toDataURL(),
-        photos: photoList
+    // Fonction interne pour logger la RAM (Chrome uniquement)
+    const logRAM = (step) => {
+        if (performance.memory) {
+            const usedRAM = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+            console.log(`[${step}] 💾 RAM : ${usedRAM} Mo / Limite : ${Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)} Mo`);
+        } else {
+            console.log(`[${step}] ℹ️ RAM : Non dispo sur ce navigateur`);
+        }
     };
 
     try {
-        // 2. Lancement du PDF (optionnel si tu envoies le ZIP)
-        await genererPDF(data);
+        console.time("Performance_Globale");
+        logRAM("Démarrage");
 
-        // 3. INITIALISATION DU ZIP (Indispensable avant le reste)
+        // --- Création du ZIP ---
+        btn.textContent = "⌛ ZIP en cours...";
         const zip = new JSZip();
-
-        // 4. Préparation du HTML
-        const htmlContent = `
+ const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -282,19 +276,33 @@ document.getElementById("generatePDF").onclick = async (e) => {
     </script>
 </body>
 </html>`;
-
-        // 5. AJOUT DES FICHIERS AU ZIP
-        zip.file("CONSULTATION.html", htmlContent);
+	
+        zip.file("CONSULTATION.html", htmlContent); // (Assure-toi que htmlContent est défini)
         
         data.photos.forEach((p, i) => {
             const base64Content = p.current.split(',')[1];
             zip.file(`photo_${i}.png`, base64Content, {base64: true});
         });
+        logRAM("Fichiers ajoutés au ZIP");
 
-        // 6. GÉNÉRATION DU ZIP (Directement en base64 pour éviter le FileReader)
+        // --- Encodage (Le moment où la RAM explose) ---
+        btn.textContent = "⌛ Encodage b64...";
+        console.time("Chrono_Encodage");
         const base64Zip = await zip.generateAsync({type: "base64"});
+        console.timeEnd("Chrono_Encodage");
+        
+        const sizeInMo = (base64Zip.length * 0.75 / 1024 / 1024).toFixed(2); // Taille réelle estimée
+        const payloadSize = (base64Zip.length / 1024 / 1024).toFixed(2); // Taille b64 (celle de Vercel)
+        console.log(`📦 Taille ZIP réel : ${sizeInMo} Mo`);
+        console.log(`📤 Taille Requête (Payload) : ${payloadSize} Mo`);
+        logRAM("Après encodage");
 
-        // 7. ENVOI À L'API
+        if (payloadSize > 4.5) {
+            console.warn("⚠️ ALERTE : Le payload dépasse les 4.5 Mo de Vercel !");
+        }
+
+        // --- Envoi ---
+        btn.textContent = "⌛ Envoi Vercel...";
         const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -305,17 +313,14 @@ document.getElementById("generatePDF").onclick = async (e) => {
             })
         });
 
-        if (response.ok) {
-            alert("✅ Rapport et photos envoyés !");
-        } else {
-            alert("❌ Erreur lors de l'envoi.");
-        }
+        if (response.ok) alert("✅ Succès !");
+        else alert(`❌ Échec (Statut: ${response.status})`);
 
     } catch (err) {
-        console.error(err);
-        alert("❌ Erreur : " + err.message);
+        console.error("❌ Crash :", err);
+        alert("Erreur critique, vérifie la console.");
     } finally {
-        // 8. RÉINITIALISATION DU BOUTON
+        console.timeEnd("Performance_Globale");
         btn.disabled = false;
         btn.textContent = "Générer PDF & Envoyer";
     }
