@@ -139,7 +139,7 @@ const generateHTMLReport = (data) => {
                 ${data.photos.map((p, i) => `
                     <div class="photo-item">
                         <img src="photo_${i}.png">
-                        <p><strong>${p.label || 'Photo ' + (i + 1)}</strong></p>
+                        <p><strong>${p.label || 'Photo ' + (i + 1) || 'GPS ' + p.gps}</strong></p>
                     </div>
                 `).join('')}
             </div>

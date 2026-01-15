@@ -236,47 +236,7 @@ document.getElementById("generatePDF").onclick = async (e) => {
     try {
         await genererPDF(data);
 
-	const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .val { font-weight: bold; color: #007bff; }
-        button { cursor: pointer; background: #e0e0e0; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-        button:hover { background: #d0d0d0; }
-        .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .img-item { background: white; padding: 10px; border-radius: 5px; text-align: center; }
-        img { width: 100%; border-radius: 3px; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>Dossier : ${data.noDossier}</h2>
-        <div class="row"><span>Client : <span class="val" id="c1">${data.nomCli} ${data.prenomCli}</span></span><button onclick="cp('c1')">Copier</button></div>
-        <div class="row"><span>Adresse : <span class="val" id="c2">${data.adresseCli}, ${data.cpCli} ${data.villeCli}</span></span><button onclick="cp('c2')">Copier</button></div>
-    </div>
-    <div class="img-grid">
-        ${data.photos.map((p, i) => `
-            <div class="img-item">
-                <img src="photo_${i}.png">
-                <p style="font-size:12px">${p.label || 'Photo '+i}</p>
-            </div>
-        `).join('')}
-    </div>
-    <script>
-        function cp(id) {
-            const t = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(t);
-            alert('Copié : ' + t);
-        }
-    </script>
-</body>
-</html>`;
-        const htmlTemplate = generateHTMLReport(rapportData);
+	const htmlTemplate = generateHTMLReport(data);
         const zip = new JSZip();
 	zip.file("CONSULTATION.html", htmlTemplate);
         data.photos.forEach((p, i) => {
