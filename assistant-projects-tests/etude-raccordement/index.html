@@ -10,6 +10,7 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 	<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   </head>
   <body>
     <header>
@@ -34,9 +35,7 @@
 	<label for="noDossier">Numéro de dossier OSR</label>
 	<input type="integer" id="noDossier" maxlenght="64" required />
 <hr />
-
 <h3>Coordonnées des travaux</h3>
-
 <div id="sectionTravaux">
     <label for="nomTravaux">Nom</label>
     <input type="text" id="nomTravaux" oninput="this.value = this.value.toUpperCase()" required />
@@ -45,21 +44,15 @@
     <input type="text" id="prenomTravaux" required />
     <button type="button" onclick="syncIdentite()" style="margin-top: 10px">
     <i class="fas fa-copy"></i> Identique au nom du client</button>
-
-
     <label for="adresseTravaux">Adresse (Travaux)</label>
     <input type="text" id="adresseTravaux" required />
     <button type="button" onclick="copyAdresseClient()" style="margin-bottom: 10px;">
     <i class="fas fa-copy"></i> Identique à l'adresse client
 </button>
-
-
     <label for="complementAdrTravaux">Complément d'adresse</label>
     <textarea id="complementAdrTravaux" rows="2"></textarea>
-
     <label for="cpTravaux">Code postal</label>
     <input type="text" id="cpTravaux" maxlength="5" required />
-
     <label for="villeTravaux">Ville</label>
     <input type="text" id="villeTravaux" oninput="this.value = this.value.toUpperCase()" required />
     <label for="noDipole">Numéro dipole</label>
@@ -68,15 +61,11 @@
 	<input type="text" id="noPoste" required />
 		<label for="dteSouhaitee">Date souhaitée</label>
 	<input type="date" id="dteSouhaitee" required />
-
-
 </div>
 <hr />
         <h2>Gestion des photos</h2>
-
         <input type="file" id="photos" accept="image/*" multiple>
         <button type="button" id="take-photo">📷 Prendre une photo</button>
-        
         <video id="camera" autoplay style="display:none; width:300px;"></video>
         <canvas id="camera-canvas" style="display:none;"></canvas>
 	<div style="text-align: center; margin-top: 10px;">
@@ -84,8 +73,6 @@
 	         <i class="fas fa-camera"></i>
 	    </button>
 	</div>
-
-
         <h3>Aperçu des photos</h3>
         <div id="photo-preview"></div>
 
@@ -93,7 +80,6 @@
 	<textarea id="travauxCli" rows="4"></textarea>
 	<label for="travauxEdf">Travaux à réaliser par <span style="color:red"> EDF</span></label>
 	<textarea id="travauxEdf" rows="4"></textarea>
-
 	<hr />
 	<h3>Etude du branchement électrique</h3>
 	<label for="energieUtil">Energie utilisée</label>
@@ -102,14 +88,10 @@
             <option value="conso">consomation</option>
             <option value="prod">production</option>
         </select>
-	
-	
         <hr />
         <h3>Signature de l'agent EDF</h3>
 	<canvas id="signature-representant-canvas" ></canvas>
 	<button type="button" id="clear-representant" class="remove-sign" >Effacer</button>
-
-
 	<hr />
 <button type="submit" id="generatePDF">Générer le PDF</button>
       </form>
@@ -117,4 +99,3 @@
     </main>
   </body>
 </html>
-

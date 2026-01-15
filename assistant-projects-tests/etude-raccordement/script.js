@@ -375,30 +375,89 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     generatePDFBtn.addEventListener("click", async (event) => {
-        event.preventDefault();
-        if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
-            alert("⚠️ La signature est obligatoire !");
-            return;
-        }
+    event.preventDefault();
 
-        const data = {
-            nomCli: document.getElementById("nomCli")?.value || "",
-            prenomCli: document.getElementById("prenomCli")?.value || "",
-            noDossier: document.getElementById("noDossier")?.value || "",
-            adresseCli: document.getElementById("adresseCli")?.value || "",
-            cpCli: document.getElementById("cpCli")?.value || "",
-            villeCli: document.getElementById("villeCli")?.value || "",
-            noPoste: document.getElementById("noPoste")?.value || "",
-            noDipole: document.getElementById("noDipole")?.value || "",
-            dteSouhaitee: document.getElementById("dteSouhaitee")?.value || "",
-            photos: photoList.map(p => ({
-                src: p.current,
-                label: p.label || "Sans titre"
-            })),
-            signature: canvasRepresentant.toDataURL("image/png")
-        };
+    // 1. Vérification sécurité
+    if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
+        alert("⚠️ La signature est obligatoire !");
+        return;
+    }
+
+    // 2. Collecte des données
+    const data = {
+        nomCli: document.getElementById("nomCli")?.value || "",
+        prenomCli: document.getElementById("prenomCli")?.value || "",
+        noDossier: document.getElementById("noDossier")?.value || "",
+        adresseCli: document.getElementById("adresseCli")?.value || "",
+        cpCli: document.getElementById("cpCli")?.value || "",
+        villeCli: document.getElementById("villeCli")?.value || "",
+        noPoste: document.getElementById("noPoste")?.value || "",
+        noDipole: document.getElementById("noDipole")?.value || "",
+        dteSouhaitee: document.getElementById("dteSouhaitee")?.value || "",
+        photos: photoList.map(p => ({
+            src: p.current,
+            label: p.label || "Sans titre",
+            gps: p.gps || "Non renseigné"
+        })),
+        signature: canvasRepresentant.toDataURL("image/png")
+    };
+
+    // Changement de texte sur le bouton pour faire patienter
+    const originalText = generatePDFBtn.textContent;
+    generatePDFBtn.textContent = "⌛ Envoi en cours...";
+    generatePDFBtn.disabled = true;
+
+    try {
+        // 3. Génération locale du PDF (téléchargement client)
         await genererPDF(data);
-    });
+
+        // 4. Préparation du ZIP pour l'envoi mail
+        const zip = new JSZip();
+        const photoFolder = zip.folder("photos");
+
+        data.photos.forEach((p, i) => {
+            // On enlève le header "data:image/png;base64," pour JSZip
+            const base64Data = p.src.split(',')[1];
+            const fileName = `photo_${i}_${p.label.replace(/\s+/g, '_')}.png`;
+            photoFolder.file(fileName, base64Data, {base64: true});
+        });
+
+        // Génération du contenu ZIP en Blob
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+
+        // 5. Envoi vers l'API Vercel
+        const reader = new FileReader();
+        reader.readAsDataURL(zipBlob);
+        reader.onloadend = async () => {
+            const base64Zip = reader.result.split(',')[1];
+
+            const response = await fetch('/api/send_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nom_client: `${data.nomCli} ${data.prenomCli}`,
+                    no_dossier: data.noDossier,
+                    zip_data: base64Zip
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("✅ PDF généré et Email envoyé avec succès !");
+            } else {
+                throw new Error(result.error || "Erreur serveur");
+            }
+        };
+
+    } catch (error) {
+        console.error("Erreur complète:", error);
+        alert("❌ Erreur lors de l'envoi : " + error.message);
+    } finally {
+        generatePDFBtn.textContent = originalText;
+        generatePDFBtn.disabled = false;
+    }
+});
 
     async function genererPDF(data) {
         const { jsPDF } = window.jspdf;
@@ -463,17 +522,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // --- PAGE VIDE TECHNIQUE ---
         pdf.addPage();
         pdf.rect(0.7, 0.5, 19.6, 27.4, 'S');
-
-        // --- ANNEXES ---
-        const annexes = ["consuelImg.png", "compteurImg.png"];
-        for (const imgName of annexes) {
-            try {
-                pdf.addPage();
-                const b64 = await imageToBase64(imgName);
-                pdf.addImage(b64, 'PNG', 1, 1, 19, 27);
-            } catch (e) { console.warn(e); }
-        }
-
         pdf.save(`intervention_${data.nomCli}.pdf`);
     }
 });
@@ -617,4 +665,39 @@ function ajouterUnePhoto(pdf, photo, yPos, hauteurMax = 10) {
     } catch (e) { 
         console.warn("Erreur image PDF :", e); 
     }
+}
+
+
+// --- FONCTION D'ENVOI VERS L'API VERCEL ---
+async function envoyerEmail(data, zipBlob) {
+    const reader = new FileReader();
+    reader.readAsDataURL(zipBlob); 
+    
+    reader.onloadend = async () => {
+        const base64Zip = reader.result.split(',')[1]; // On récupère juste le base64
+
+        const payload = {
+            nom_client: `${data.nomCli} ${data.prenomCli}`,
+            no_dossier: data.noDossier,
+            zip_data: base64Zip
+        };
+
+        try {
+            const response = await fetch('/api/send_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert("✅ Email envoyé avec succès !");
+            } else {
+                alert("❌ Erreur : " + result.error);
+            }
+        } catch (error) {
+            console.error("Erreur réseau :", error);
+            alert("❌ Impossible de contacter le serveur d'envoi.");
+        }
+    };
 }
