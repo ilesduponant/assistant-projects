@@ -22,14 +22,14 @@ export default async function handler(req, res) {
 
         // 3. Envoi via Resend
         const data = await resend.emails.send({
-            from: 'Assistant Projets <onboarding@resend.dev>', // Ou ton domaine vérifié
-            to: ['eryuv1829@gmail.com'], // Ton adresse de réception
+            from: 'Assistant Projets <onboarding@resend.dev>', //adresse d'envoi
+            to: ['eryuv1829@gmail.com'], //adresse réception
             subject: `Rapport : ${nom_client} - Dossier ${no_dossier}`,
             html: `<p>Nouveau rapport d'intervention pour <strong>${nom_client}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
             attachments: [
                 {
                     filename: `photos_${no_dossier}.zip`,
-                    content: zip_data, // Le base64 envoyé par script.js
+                    content: zip_data, //base64
                 },
             ],
         });
