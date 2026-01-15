@@ -377,13 +377,12 @@ document.addEventListener("DOMContentLoaded", () => {
     generatePDFBtn.addEventListener("click", async (event) => {
     event.preventDefault();
 
-    // 1. Vérification sécurité
     if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
         alert("⚠️ La signature est obligatoire !");
         return;
     }
 
-    // 2. Collecte des données
+    // Capture des données
     const data = {
         nomCli: document.getElementById("nomCli")?.value || "",
         prenomCli: document.getElementById("prenomCli")?.value || "",
@@ -402,36 +401,32 @@ document.addEventListener("DOMContentLoaded", () => {
         signature: canvasRepresentant.toDataURL("image/png")
     };
 
-    // Changement de texte sur le bouton pour faire patienter
-    const originalText = generatePDFBtn.textContent;
     generatePDFBtn.textContent = "⌛ Envoi en cours...";
     generatePDFBtn.disabled = true;
 
     try {
-        // 3. Génération locale du PDF (téléchargement client)
+        // 1. Générer le PDF
         await genererPDF(data);
 
-        // 4. Préparation du ZIP pour l'envoi mail
+        // 2. Créer le ZIP
         const zip = new JSZip();
         const photoFolder = zip.folder("photos");
-
         data.photos.forEach((p, i) => {
-            // On enlève le header "data:image/png;base64," pour JSZip
             const base64Data = p.src.split(',')[1];
-            const fileName = `photo_${i}_${p.label.replace(/\s+/g, '_')}.png`;
-            photoFolder.file(fileName, base64Data, {base64: true});
+            photoFolder.file(`photo_${i}.png`, base64Data, {base64: true});
         });
-
-        // Génération du contenu ZIP en Blob
         const zipBlob = await zip.generateAsync({ type: "blob" });
 
-        // 5. Envoi vers l'API Vercel
+        // 3. Convertir ZIP en Base64 pour l'envoi JSON
         const reader = new FileReader();
         reader.readAsDataURL(zipBlob);
         reader.onloadend = async () => {
             const base64Zip = reader.result.split(',')[1];
 
-            const response = await fetch('/api/send_report', {
+            // --- ATTENTION : UTILISE TON URL VERCEL ICI ---
+            const apiUrl = 'https://assistant-projects-q9lix48o4-valerians-projects-417c35ac.vercel.app/api/send_report';
+            
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -441,24 +436,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
             });
 
-            const result = await response.json();
-
             if (response.ok) {
-                alert("✅ PDF généré et Email envoyé avec succès !");
+                alert("✅ Succès : PDF téléchargé et Email envoyé !");
             } else {
-                throw new Error(result.error || "Erreur serveur");
+                const err = await response.json();
+                alert("❌ Erreur serveur : " + err.error);
             }
         };
 
     } catch (error) {
-        console.error("Erreur complète:", error);
-        alert("❌ Erreur lors de l'envoi : " + error.message);
+        alert("❌ Erreur : " + error.message);
     } finally {
-        generatePDFBtn.textContent = originalText;
+        generatePDFBtn.textContent = "Générer PDF & Envoyer";
         generatePDFBtn.disabled = false;
     }
 });
-
     async function genererPDF(data) {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ unit: 'cm' });
