@@ -243,29 +243,27 @@ document.getElementById("generatePDF").onclick = async (e) => {
             const base64Content = p.current.split(',')[1];
             zip.file(`photo_${i}.png`, base64Content, {base64: true});
         });
-        const base64Zip = await zip.generateAsync({type: "base64"});
-        
-        const reader = new FileReader();
-        reader.readAsDataURL(zipBlob);
-        reader.onloadend = async () => {
-            const base64Zip = reader.result.split(',')[1];
-            try {
-                const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
+        // ... après avoir ajouté les fichiers au zip ...
+
+// 1. On génère le ZIP directement en texte (base64)
+const base64Zip = await zip.generateAsync({type: "base64"});
+
+// 2. On l'envoie direct (on n'a pas besoin de zipBlob ni de reader)
+const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        nom_client: `${data.nomCli} ${data.prenomCli}`,
-        no_dossier: data.noDossier,
-        zip_data: base64Zip // On utilise directement la chaîne produite
+        nom_client: `${rapportData.nomCli} ${rapportData.prenomCli}`,
+        no_dossier: rapportData.noDossier,
+        zip_data: base64Zip // On utilise la variable créée juste au-dessus
     })
-});                if (response.ok) alert("✅ Envoyé !");
-                else alert("❌ Erreur d'envoi");
-            } catch (err) {
-                alert("❌ Erreur réseau");
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Générer PDF & Envoyer";
-            }
+});
+
+if (response.ok) {
+    alert("✅ Rapport envoyé avec succès !");
+} else {
+    alert("❌ Erreur lors de l'envoi");
+}
         };
     } catch (err) {
         alert("Erreur : " + err.message);
