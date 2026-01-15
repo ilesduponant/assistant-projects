@@ -569,8 +569,8 @@ function addPhotoToPreview(photoData) {
         
         gpsInfo.textContent = "Recherche...";
         navigator.geolocation.getCurrentPosition((pos) => {
-            const lat = pos.coords.latitude.toFixed(6);
-            const lon = pos.coords.longitude.toFixed(6);
+            const lat = pos.coords.latitude.toFixed(8);
+            const lon = pos.coords.longitude.toFixed(8);
             photoObject.gps = `Lat: ${lat}, Lon: ${lon}`;
             gpsInfo.textContent = photoObject.gps;
             gpsBtn.style.backgroundColor = "#28a745";
