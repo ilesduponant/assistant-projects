@@ -1,6 +1,7 @@
 {
-  "type": "module",
+  "name": "assistant-projects",
+  "version": "1.0.0",
   "dependencies": {
-    "resend": "latest"
+    "resend": "^3.0.0"
   }
 }

@@ -357,59 +357,78 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- GENERATION PDF & ENVOI ---
     document.getElementById("generatePDF").onclick = async (e) => {
-        e.preventDefault();
-        if (!hasSignature) return alert("Signature obligatoire !");
+    e.preventDefault();
+    if (!hasSignature) return alert("⚠️ Signature obligatoire !");
 
-        const btn = e.target;
-        btn.disabled = true;
-        btn.textContent = "Traitement...";
+    const btn = e.target;
+    btn.disabled = true;
+    btn.textContent = "⌛ Traitement...";
 
-        const data = {
-            nomCli: document.getElementById("nomCli").value,
-            prenomCli: document.getElementById("prenomCli").value,
-            noDossier: document.getElementById("noDossier").value,
-            adresseCli: document.getElementById("adresseCli").value,
-            cpCli: document.getElementById("cpCli").value,
-            villeCli: document.getElementById("villeCli").value,
-            signature: canvas.toDataURL(),
-            photos: photoList
-        };
+    const data = {
+        nomCli: document.getElementById("nomCli").value,
+        prenomCli: document.getElementById("prenomCli").value,
+        noDossier: document.getElementById("noDossier").value,
+        adresseCli: document.getElementById("adresseCli").value,
+        cpCli: document.getElementById("cpCli").value,
+        villeCli: document.getElementById("villeCli").value,
+        signature: canvas.toDataURL(),
+        photos: photoList
+    };
 
-        try {
-            await genererPDF(data);
-            
-            // Création ZIP
-            const zip = new JSZip();
-            data.photos.forEach((p, i) => {
-                zip.file(`photo_${i}.png`, p.current.split(',')[1], {base64: true});
-            });
-            const zipBlob = await zip.generateAsync({type: "blob"});
-            
-            // Envoi Vercel
-            const reader = new FileReader();
-            reader.readAsDataURL(zipBlob);
-            reader.onloadend = async () => {
-                const response = await fetch('https://assistant-projects-q9lix48o4-valerians-projects-417c35ac.vercel.app/api/send_report', {
+    try {
+        // 1. Génération du PDF local pour l'utilisateur
+        await genererPDF(data);
+        
+        // 2. Création du fichier ZIP contenant toutes les photos
+        const zip = new JSZip();
+        data.photos.forEach((p, i) => {
+            // On nettoie le préfixe base64 pour JSZip
+            const base64Content = p.current.split(',')[1];
+            zip.file(`photo_${i}.png`, base64Content, {base64: true});
+        });
+        const zipBlob = await zip.generateAsync({type: "blob"});
+        
+        // 3. Conversion du ZIP en Base64 et Envoi à l'API
+        const reader = new FileReader();
+        reader.readAsDataURL(zipBlob);
+        reader.onloadend = async () => {
+            const base64Zip = reader.result.split(',')[1];
+
+            try {
+                // UTILISATION DE L'URL STABLE
+                const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        nom_client: data.nomCli,
+                        nom_client: `${data.nomCli} ${data.prenomCli}`,
                         no_dossier: data.noDossier,
-                        zip_data: reader.result.split(',')[1]
+                        zip_data: base64Zip
                     })
                 });
-                if(response.ok) alert("Envoyé !");
-                else alert("Erreur d'envoi");
-            };
-        } catch (err) {
-            console.error(err);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = "Générer PDF & Envoyer";
-        }
-    };
-});
 
+                if (response.ok) {
+                    alert("✅ Rapport et photos envoyés avec succès !");
+                } else {
+                    const errorDetail = await response.json();
+                    alert("❌ Erreur serveur : " + (errorDetail.error || "Inconnue"));
+                }
+            } catch (fetchError) {
+                alert("❌ Erreur réseau : Impossible de contacter le serveur.");
+                console.error(fetchError);
+            } finally {
+                // On réactive le bouton ici car le reader est asynchrone
+                btn.disabled = false;
+                btn.textContent = "Générer PDF & Envoyer";
+            }
+        };
+
+    } catch (err) {
+        console.error(err);
+        alert("❌ Erreur lors de la génération : " + err.message);
+        btn.disabled = false;
+        btn.textContent = "Générer PDF & Envoyer";
+    }
+};
 // --- LOGIQUE PDF ---
 async function genererPDF(data) {
     const { jsPDF } = window.jspdf;

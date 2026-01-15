@@ -1,35 +1,42 @@
-import { Resend } from "resend";
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
-  // --- CORS ---
-  res.setHeader("Access-Control-Allow-Origin", "https://ilesduponant.github.io");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    // 1. Configuration des Headers CORS
+    res.setHeader('Access-Control-Allow-Origin', 'https://ilesduponant.github.io');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+    // 2. Gestion de la requête de pré-vérification (Preflight)
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
 
-  try {
-    const { nom_client, no_dossier, zip_data } = req.body;
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Méthode non autorisée' });
+    }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    try {
+        const { nom_client, no_dossier, zip_data } = req.body;
 
-    await resend.emails.send({
-      from: "Rapports <onboarding@resend.dev>",
-      to: ["eryuv1829@gmail.com"],
-      subject: `Rapport: ${no_dossier} - ${nom_client}`,
-      html: `<p>Dossier ${no_dossier} reçu pour ${nom_client}.</p>`,
-      attachments: [
-        {
-          filename: `chantier_${no_dossier}.zip`,
-          content: zip_data
-        }
-      ]
-    });
+        // 3. Envoi via Resend
+        const data = await resend.emails.send({
+            from: 'Assistant Projets <onboarding@resend.dev>', // Ou ton domaine vérifié
+            to: ['ton-email@exemple.com'], // Ton adresse de réception
+            subject: `Rapport : ${nom_client} - Dossier ${no_dossier}`,
+            html: `<p>Nouveau rapport d'intervention pour <strong>${nom_client}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
+            attachments: [
+                {
+                    filename: `photos_${no_dossier}.zip`,
+                    content: zip_data, // Le base64 envoyé par script.js
+                },
+            ],
+        });
 
-    res.status(200).json({ status: "success" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+        return res.status(200).json({ status: 'success', id: data.id });
+    } catch (error) {
+        console.error("Erreur Resend:", error);
+        return res.status(500).json({ error: error.message });
+    }
 }
