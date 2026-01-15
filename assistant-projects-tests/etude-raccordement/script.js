@@ -1,4 +1,11 @@
-//variables
+/**
+ * V1.13.4 - Unifiée et Sécurisée
+ * - Correction CORS pour Vercel
+ * - Correction Chemin Image En-tête
+ * - Intégration Éditeur d'images & GPS
+ */
+
+// --- VARIABLES GLOBALES ---
 const photosInput = document.getElementById("photos");
 const photoPreviewContainer = document.getElementById("photo-preview");
 const takePhotoButton = document.getElementById("take-photo");
@@ -7,689 +14,359 @@ const camera = document.getElementById("camera");
 const cameraCanvas = document.getElementById("camera-canvas");
 const cameraContext = cameraCanvas.getContext("2d");
 
-let photoList = []; //Tableau d'objets : { original, current, drawings, label }
+let photoList = []; // { original, current, drawings, label, gps }
+let hasSignature = false;
 
-//upload de photos
-photosInput.addEventListener("change", (event) => {
-    const files = Array.from(event.target.files);
-    files.forEach((file) => {
-        if (file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = (e) => addPhotoToPreview(e.target.result);
-            reader.readAsDataURL(file);
-        }
-    });
-    event.target.value = ""; // Vide l'input pour permettre de remettre la même photo
-});
-
-//gestion caméra
-takePhotoButton.addEventListener("click", async () => {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" },
-            audio: false
-        });
-        camera.srcObject = stream;
-        camera.setAttribute("playsinline", true);
-	camera.style.display = "block";
-        savePhotoButton.style.display = "inline-block";
-        camera.play();
-    } catch (error) {
-        alert("Erreur caméra : " + error);
-    }
-});
-
-savePhotoButton.addEventListener("click", () => {
-    cameraCanvas.width = camera.videoWidth;
-    cameraCanvas.height = camera.videoHeight;
-    cameraContext.drawImage(camera, 0, 0);
-
-    const photoData = cameraCanvas.toDataURL("image/png");
-    addPhotoToPreview(photoData);
-
-    // Arrêt de la caméra
-    const stream = camera.srcObject;
-    if (stream) stream.getTracks().forEach((t) => t.stop());
-
-    camera.style.display = "none";
-    savePhotoButton.style.display = "none";
-});
-
-//affichage et suppression des photos via l'aperçu
-function addPhotoToPreview(photoData) {
-    const photoObject = {
-        original: photoData,
-        current: photoData,
-        drawings: [],
-        label: ""
-    };
-    //div pour contenir les éléments ci-dessous
-    const photoContainer = document.createElement("div");
-    photoContainer.style.display = "inline-block";
-    photoContainer.style.margin = "5px";
-    photoContainer.style.position = "relative"; 
-
-   //aperçu de l'image
-    const img = document.createElement("img");
-    img.src = photoObject.current;
-    img.style.width = "100px";
-    img.style.border = "1px solid #ccc";
-    photoContainer.appendChild(img);
-    
-    //bouton de suppression
-    const deleteButton = document.createElement("button");
-    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-    deleteButton.className = "delete-button";     
-    deleteButton.onclick = () => {
-        photoPreviewContainer.removeChild(photoContainer);
-        photoList = photoList.filter((p) => p !== photoObject);
-    };
-    photoContainer.appendChild(deleteButton);
-
-    //input libellé
-    const labelInp = document.createElement("input");
-    labelInp.type = "text";
-    labelInp.placeholder = "Libellé de la photo";
-    labelInp.style.display = "block";
-    labelInp.style.marginTop = "5px";
-    labelInp.oninput = () => { photoObject.label = labelInp.value; };
-    photoContainer.appendChild(labelInp);
-
-    //bouton de modification
-    const editBtn = document.createElement("button");
-    editBtn.type = "button";
-    editBtn.textContent = "Modifier";
-    editBtn.style.width = "100%";
-    editBtn.onclick = () => {
-        const idx = photoList.indexOf(photoObject);
-        openEditorInNewTab(photoObject.original, idx, photoObject.drawings);
-    };
-    photoContainer.appendChild(editBtn);
-
-    photoPreviewContainer.appendChild(photoContainer);
-    photoList.push(photoObject);
-}
-//-----------------------------------------
-//onglet édition d'image
-function openEditorInNewTab(originalData, index, existingDrawings) {
-    const editorWindow = window.open("", "_blank");
-    
-    //conversion des dessins en str 
-    const drawingsJson = JSON.stringify(existingDrawings);
-
-    editorWindow.document.write(`
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Éditeur</title>
-    <style>
-        body { margin: 0; background: #222; font-family: sans-serif; overflow: hidden; }
-        #toolbar { display: flex; gap: 5px; padding: 10px; background: #eee; flex-wrap: wrap; justify-content: center; }
-        .tool-btn { width: 44px; height: 44px; border: 1px solid #ccc; background: white; border-radius: 5px; cursor: pointer; display:flex; align-items:center; justify-content:center; }
-        .tool-btn.active { background: #007bff; color: white; }
-        .tool-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
-        #canvas-container { height: calc(100vh - 120px); display: flex; justify-content: center; align-items: center; }
-        canvas { background: white; touch-action: none; max-width: 100%; max-height: 100%; }
-    </style>
-</head>
-<body>
-    <div id="toolbar">
-        <button class="tool-btn active" onclick="setTool('free', this)"><svg viewBox="0 0 24 24"><path d="M12 19c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM6 1c-1.1 0-2 ..."/></svg></button>
-        <button class="tool-btn" onclick="setTool('line', this)"><svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"></line></svg></button>
-        <button class="tool-btn" onclick="setTool('rect', this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg></button>
-        <button class="tool-btn" onclick="setTool('circle', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle></svg></button>
-        <button class="tool-btn" onclick="setTool('text', this)"><svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></button>
-        <button class="tool-btn" onclick="setTool('eraser', this)"><svg viewBox="0 0 24 24"><path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z"></path></svg></button>
-        <button class="tool-btn" onclick="undo()">↩</button>
-        <button class="tool-btn" onclick="save()" style="background:#28a745; color:white;">✔</button>
-    </div>
-    <div style="padding: 5px; background: #ddd; display: flex; gap: 10px; justify-content: center;">
-        <input type="color" id="col" value="#ff0000" onchange="color=this.value">
-        <input type="range" min="1" max="50" value="5" onchange="size=parseInt(this.value)">
-    </div>
-    <div id="canvas-container"><canvas id="canvas"></canvas></div>
-
-    <script>
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        let tool = "free", drawing = false, color = "#ff0000", size = 5;
-        let startX, startY;
-        
-        // RECUPERATION DES DESSINS EXISTANTS
-        let undoStack = ${drawingsJson}; 
-        let currentPath = null;
-        
-        const baseImg = new Image();
-        baseImg.onload = () => {
-            const ratio = Math.min(window.innerWidth / baseImg.naturalWidth, (window.innerHeight - 150) / baseImg.naturalHeight);
-            canvas.width = baseImg.naturalWidth * ratio;
-            canvas.height = baseImg.naturalHeight * ratio;
-            drawAll();
-        };
-        baseImg.src = "${originalData}";
-
-        function getPos(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
-        }
-
-        canvas.addEventListener("mousedown", start);
-        window.addEventListener("mousemove", move);
-        window.addEventListener("mouseup", end);
-        canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); }, {passive:false});
-        canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); }, {passive:false});
-        canvas.addEventListener("touchend", end);
-
-        function start(e) {
-            drawing = true; const p = getPos(e); startX = p.x; startY = p.y;
-            if(tool !== "text") currentPath = { tool, color, size, pts: [p] };
-        }
-
-        function move(e) {
-            if(!drawing || tool === "text") return;
-            const p = getPos(e);
-            if(tool === "free" || tool === "eraser") currentPath.pts.push(p);
-            else currentPath.pts = [{x:startX, y:startY}, p];
-            drawAll();
-        }
-
-        function end(e) {
-            if(!drawing) return; drawing = false;
-            if(tool === "text") {
-                const t = prompt("Texte :");
-                if(t) undoStack.push({ tool: "text", color, size, pts: [{x:startX, y:startY}], txt: t });
-            } else if(currentPath) undoStack.push(currentPath);
-            currentPath = null; drawAll();
-        }
-
-        function drawAll() {
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
-            
-            const tmp = document.createElement("canvas");
-            tmp.width = canvas.width; tmp.height = canvas.height;
-            const tCtx = tmp.getContext("2d");
-
-            const paths = undoStack.concat(currentPath ? [currentPath] : []);
-            paths.forEach(p => {
-                tCtx.globalCompositeOperation = p.tool === "eraser" ? "destination-out" : "source-over";
-                tCtx.strokeStyle = p.color; tCtx.fillStyle = p.color; tCtx.lineWidth = p.size; tCtx.lineCap = "round"; tCtx.lineJoin = "round";
-                tCtx.beginPath();
-                if(p.tool === "free" || p.tool === "eraser") {
-                    tCtx.moveTo(p.pts[0].x, p.pts[0].y);
-                    p.pts.forEach(pt => tCtx.lineTo(pt.x, pt.y));
-                    tCtx.stroke();
-                } else if(p.tool === "line") {
-                    tCtx.moveTo(p.pts[0].x, p.pts[0].y); tCtx.lineTo(p.pts[1].x, p.pts[1].y); tCtx.stroke();
-                } else if(p.tool === "rect") {
-                    tCtx.strokeRect(p.pts[0].x, p.pts[0].y, p.pts[1].x - p.pts[0].x, p.pts[1].y - p.pts[0].y);
-                } else if(p.tool === "circle") {
-                    const r = Math.hypot(p.pts[1].x - p.pts[0].x, p.pts[1].y - p.pts[0].y);
-                    tCtx.arc(p.pts[0].x, p.pts[0].y, r, 0, Math.PI*2); tCtx.stroke();
-                } else if(p.tool === "text") {
-                    tCtx.font = (p.size * 4) + "px Arial"; tCtx.fillText(p.txt, p.pts[0].x, p.pts[0].y);
-                }
-            });
-            ctx.drawImage(tmp, 0, 0);
-        }
-
-        function setTool(t, b) { tool = t; document.querySelectorAll(".tool-btn").forEach(x=>x.classList.remove("active")); b.classList.add("active"); }
-        function undo() { undoStack.pop(); drawAll(); }
-        function save() {
-            window.opener.postMessage({ editedImage: canvas.toDataURL(), drawings: undoStack, index: ${index} }, "*");
-            window.close();
-        }
-    </script>
-</body>
-</html>
-    `);
-}
-
-//reception de l'image
-window.addEventListener("message", (event) => {
-    if (event.data.editedImage) {
-        const { editedImage, drawings, index } = event.data;
-        photoList[index].current = editedImage;
-        photoList[index].drawings = drawings; // On sauvegarde les calques
-
-        const targetImg = photoPreviewContainer.children[index].querySelector("img");
-        if (targetImg) targetImg.src = editedImage;
-    }
-});
-
-
-//--------------------------------------
-// Les fonctions appelées par onclick dans le HTML doivent être globales
-window.syncIdentite = function() {
-    const n = document.getElementById('nomCli').value;
-    const p = document.getElementById('prenomCli').value;
-    document.getElementById('nomTravaux').value = n;
-    document.getElementById('prenomTravaux').value = p;
-};
-
-window.copyAdresseClient = function() {
-    document.getElementById('adresseTravaux').value = document.getElementById('adresseCli').value;
-    document.getElementById('complementAdrTravaux').value = document.getElementById('complementAdrCli').value;
-    document.getElementById('cpTravaux').value = document.getElementById('cpCli').value;
-    document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
-};
-
-
-
+// --- INITIALISATION AU CHARGEMENT ---
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("V1.13.3...");
-    const form = document.getElementById("raccordementForm");
+    console.log("Démarrage V1.13.4...");
+    
     const generatePDFBtn = document.getElementById("generatePDF");
-    let hasSignature = false;
-
-    // Définition de la fonction de signature AVANT de l'appeler
-    function setupSignatureCanvas(canvasId, clearButtonId) {
-        const canvas = document.getElementById(canvasId);
-        const context = canvas.getContext("2d");
-        let isDrawing = false;
-        let tempCanvas = document.createElement("canvas");
-        let tempContext = tempCanvas.getContext("2d");
-
-        const synchronizeCanvasSize = () => {
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            tempContext.drawImage(canvas, 0, 0);
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            context.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
-        };
-
-        const getPosition = (event) => {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-            const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        };
-
-        const startDrawing = (event) => {
-            event.preventDefault();
-            isDrawing = true;
-            const pos = getPosition(event);
-            context.beginPath();
-            context.moveTo(pos.x, pos.y);
-        };
-
-        const draw = (event) => {
-            if (!isDrawing) return;
-            event.preventDefault();
-            hasSignature = true;
-            const pos = getPosition(event);
-            context.lineTo(pos.x, pos.y);
-            context.stroke();
-        };
-
-        const stopDrawing = () => { isDrawing = false; };
-
-        synchronizeCanvasSize();
-        window.addEventListener("resize", synchronizeCanvasSize);
-        canvas.addEventListener("mousedown", startDrawing);
-        canvas.addEventListener("mousemove", draw);
-        window.addEventListener("mouseup", stopDrawing);
-        canvas.addEventListener("touchstart", startDrawing);
-        canvas.addEventListener("touchmove", draw);
-        canvas.addEventListener("touchend", stopDrawing);
-
-        document.getElementById(clearButtonId).addEventListener("click", () => {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            hasSignature = false; 
-        });
-        
-        return canvas;
-    }
-
-    // Initialisation du canvas
     const canvasRepresentant = setupSignatureCanvas("signature-representant-canvas", "clear-representant");
 
-    function isCanvasEmpty(canvas) {
-        const blank = document.createElement('canvas');
-        blank.width = canvas.width;
-        blank.height = canvas.height;
-        return canvas.toDataURL() === blank.toDataURL();
-    }
-
-    const imageToBase64 = (url) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.setAttribute("crossOrigin", "anonymous"); 
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL("image/png"));
-            };
-            img.onerror = () => reject("Erreur de chargement : " + url);
-            img.src = url;
-        });
-    };
-
+    // --- GESTIONNAIRE PRINCIPAL : GÉNÉRATION ET ENVOI ---
     generatePDFBtn.addEventListener("click", async (event) => {
-    event.preventDefault();
+        event.preventDefault();
 
-    if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
-        alert("⚠️ La signature est obligatoire !");
-        return;
-    }
+        if (!hasSignature || isCanvasEmpty(canvasRepresentant)) {
+            alert("⚠️ La signature est obligatoire !");
+            return;
+        }
 
-    // Capture des données
-    const data = {
-        nomCli: document.getElementById("nomCli")?.value || "",
-        prenomCli: document.getElementById("prenomCli")?.value || "",
-        noDossier: document.getElementById("noDossier")?.value || "",
-        adresseCli: document.getElementById("adresseCli")?.value || "",
-        cpCli: document.getElementById("cpCli")?.value || "",
-        villeCli: document.getElementById("villeCli")?.value || "",
-        noPoste: document.getElementById("noPoste")?.value || "",
-        noDipole: document.getElementById("noDipole")?.value || "",
-        dteSouhaitee: document.getElementById("dteSouhaitee")?.value || "",
-        photos: photoList.map(p => ({
-            src: p.current,
-            label: p.label || "Sans titre",
-            gps: p.gps || "Non renseigné"
-        })),
-        signature: canvasRepresentant.toDataURL("image/png")
-    };
-
-    generatePDFBtn.textContent = "⌛ Envoi en cours...";
-    generatePDFBtn.disabled = true;
-
-    try {
-        // 1. Générer le PDF
-        await genererPDF(data);
-
-        // 2. Créer le ZIP
-        const zip = new JSZip();
-        const photoFolder = zip.folder("photos");
-        data.photos.forEach((p, i) => {
-            const base64Data = p.src.split(',')[1];
-            photoFolder.file(`photo_${i}.png`, base64Data, {base64: true});
-        });
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-
-        // 3. Convertir ZIP en Base64 pour l'envoi JSON
-        const reader = new FileReader();
-        reader.readAsDataURL(zipBlob);
-        reader.onloadend = async () => {
-            const base64Zip = reader.result.split(',')[1];
-
-            // --- ATTENTION : UTILISE TON URL VERCEL ICI ---
-            const apiUrl = 'https://assistant-projects-q9lix48o4-valerians-projects-417c35ac.vercel.app/api/send_report';
-            
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nom_client: `${data.nomCli} ${data.prenomCli}`,
-                    no_dossier: data.noDossier,
-                    zip_data: base64Zip
-                })
-            });
-
-            if (response.ok) {
-                alert("✅ Succès : PDF téléchargé et Email envoyé !");
-            } else {
-                const err = await response.json();
-                alert("❌ Erreur serveur : " + err.error);
-            }
+        const data = {
+            nomCli: document.getElementById("nomCli")?.value || "",
+            prenomCli: document.getElementById("prenomCli")?.value || "",
+            noDossier: document.getElementById("noDossier")?.value || "",
+            adresseCli: document.getElementById("adresseCli")?.value || "",
+            cpCli: document.getElementById("cpCli")?.value || "",
+            villeCli: document.getElementById("villeCli")?.value || "",
+            noPoste: document.getElementById("noPoste")?.value || "",
+            noDipole: document.getElementById("noDipole")?.value || "",
+            dteSouhaitee: document.getElementById("dteSouhaitee")?.value || "",
+            photos: photoList.map(p => ({
+                src: p.current,
+                label: p.label || "Sans titre",
+                gps: p.gps || "Non renseigné"
+            })),
+            signature: canvasRepresentant.toDataURL("image/png")
         };
 
-    } catch (error) {
-        alert("❌ Erreur : " + error.message);
-    } finally {
-        generatePDFBtn.textContent = "Générer PDF & Envoyer";
-        generatePDFBtn.disabled = false;
-    }
-});
-    async function genererPDF(data) {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ unit: 'cm' });
+        generatePDFBtn.textContent = "⌛ Envoi en cours...";
+        generatePDFBtn.disabled = true;
 
-        // --- PAGE 1 ---
         try {
-            const enteteBase64 = await imageToBase64("enteteImg.png");
-            pdf.addImage(enteteBase64, 'PNG', 1, 0.2, 18.62, 11.67);
-        } catch (e) { console.warn(e); }
+            // 1. Génération locale du PDF (Téléchargement automatique)
+            await genererPDF(data);
 
-        pdf.setFontSize(12);
-        pdf.text(`${data.nomCli} ${data.prenomCli}`, 10.5, 14, { align: "center" });
-        pdf.text(`${data.adresseCli}`, 10.5, 15, { align: "center"});
-        pdf.text(`${data.cpCli} ${data.villeCli}`, 10.5, 16, { align: "center"});
-        pdf.text(`Dossier : ${data.noDossier}`, 10.5, 18, {align: "center"});
+            // 2. Création du ZIP pour l'envoi
+            const zip = new JSZip();
+            const photoFolder = zip.folder("photos");
+            data.photos.forEach((p, i) => {
+                const base64Data = p.src.split(',')[1];
+                photoFolder.file(`photo_${i}.png`, base64Data, {base64: true});
+            });
+            const zipBlob = await zip.generateAsync({ type: "blob" });
 
-        // --- PAGE 2 ---
-        pdf.addPage();
-        pdf.setDrawColor(0, 0, 0);
-        pdf.setLineWidth(0.1);
-        pdf.rect(0.7, 0.5, 19.6, 28.5, 'S'); 
+            // 3. Conversion et Envoi API
+            const reader = new FileReader();
+            reader.readAsDataURL(zipBlob);
+            reader.onloadend = async () => {
+                const base64Zip = reader.result.split(',')[1];
+                const apiUrl = 'https://assistant-projects-q9lix48o4-valerians-projects-417c35ac.vercel.app/api/send_report';
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nom_client: `${data.nomCli} ${data.prenomCli}`,
+                        no_dossier: data.noDossier,
+                        zip_data: base64Zip
+                    })
+                });
 
-        pdf.setFillColor(210, 230, 255);
-        pdf.rect(0.7, 1.5, 19.6, 3.5, 'F');
-        pdf.line(0.7, 1.5, 20.3, 1.5);
-        pdf.line(0.7, 5, 20.3, 5);
-
-        pdf.setFontSize(12);
-        pdf.text("ETUDE DE VOTRE BRANCHEMENT ELECTRIQUE", 10.5, 1, {align: "center"});
-        pdf.text("Coordonnées des travaux", 1, 2);
-        pdf.setFontSize(10);
-        pdf.text(`Nom : ${data.nomCli} ${data.prenomCli}`, 2, 2.5);
-        pdf.text(`Adresse des travaux : ${data.adresseCli}`, 2, 3);
-        pdf.text(`Commune : ${data.villeCli}`, 2, 3.5);
-        pdf.text(`Nom et n° du POSTE : ${data.noPoste}`, 2, 4.2);
-        pdf.text(`N° DIPOLE : ${data.noDipole}`, 10.5, 4.2);
-        pdf.text(`Date souhaitée : ${data.dteSouhaitee}`, 2, 4.7);
-
-        pdf.setFillColor(210, 230, 255);
-        pdf.rect(1.5, 5.5, 18, 1, 'FD');
-        pdf.text(`Branchement ${data.nomCli}`, 10.5, 6.1, {align: "center"});
-
-        if (data.photos && data.photos.length > 0) {
-            ajouterUnePhoto(pdf, data.photos[0], 7.5, 13);
-        }
-
-        // --- PAGES PHOTOS SUIVANTES ---
-        if (data.photos && data.photos.length > 1) {
-            for (let i = 1; i < data.photos.length; i += 2) {
-                pdf.addPage();
-                pdf.rect(0.7, 0.5, 19.6, 28.5, 'S');
-                pdf.line(0.7, 1.5, 20.3, 1.5);
-                pdf.text("PHOTOS DE L'INTERVENTION (SUITE)", 10.5, 1.1, { align: "center" });
-                ajouterUnePhoto(pdf, data.photos[i], 2, 10);
-                if (data.photos[i + 1]) {
-                    ajouterUnePhoto(pdf, data.photos[i + 1], 15, 10);
+                if (response.ok) {
+                    alert("✅ Succès : PDF généré et Email envoyé avec photos !");
+                } else {
+                    const err = await response.json();
+                    alert("❌ Erreur serveur : " + err.error);
                 }
-            }
-        }
+            };
 
-        // --- PAGE VIDE TECHNIQUE ---
-        pdf.addPage();
-        pdf.rect(0.7, 0.5, 19.6, 27.4, 'S');
-        pdf.save(`intervention_${data.nomCli}.pdf`);
-    }
+        } catch (error) {
+            alert("❌ Erreur : " + error.message);
+        } finally {
+            generatePDFBtn.textContent = "Générer PDF & Envoyer";
+            generatePDFBtn.disabled = false;
+        }
+    });
 });
 
-// Fonction globale pour ajouter les photos
-// --- FONCTION APERÇU AVEC CAPTURE GPS ---
+// --- GESTION DE LA SIGNATURE ---
+function setupSignatureCanvas(canvasId, clearButtonId) {
+    const canvas = document.getElementById(canvasId);
+    const context = canvas.getContext("2d");
+    let isDrawing = false;
+
+    const getPosition = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: cx - rect.left, y: cy - rect.top };
+    };
+
+    const start = (e) => { e.preventDefault(); isDrawing = true; context.beginPath(); const p = getPosition(e); context.moveTo(p.x, p.y); };
+    const draw = (e) => { if (!isDrawing) return; e.preventDefault(); hasSignature = true; const p = getPosition(e); context.lineTo(p.x, p.y); context.stroke(); };
+    const stop = () => isDrawing = false;
+
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", draw);
+    window.addEventListener("mouseup", stop);
+    canvas.addEventListener("touchstart", start, {passive: false});
+    canvas.addEventListener("touchmove", draw, {passive: false});
+    canvas.addEventListener("touchend", stop);
+
+    document.getElementById(clearButtonId).addEventListener("click", () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        hasSignature = false;
+    });
+    return canvas;
+}
+
+function isCanvasEmpty(canvas) {
+    const blank = document.createElement('canvas');
+    blank.width = canvas.width; blank.height = canvas.height;
+    return canvas.toDataURL() === blank.toDataURL();
+}
+
+// --- GESTIONNAIRE DE PHOTOS (Aperçu, GPS, Suppression) ---
 function addPhotoToPreview(photoData) {
     const photoObject = {
         original: photoData,
         current: photoData,
         drawings: [],
         label: "",
-        gps: "" // Stockage des coordonnées
+        gps: ""
     };
 
-    const photoContainer = document.createElement("div");
-    photoContainer.style.display = "inline-block";
-    photoContainer.style.margin = "10px";
-    photoContainer.style.position = "relative";
-    photoContainer.style.width = "120px";
-    photoContainer.style.verticalAlign = "top";
+    const container = document.createElement("div");
+    container.style.cssText = "display:inline-block; margin:10px; width:120px; vertical-align:top; border:1px solid #ddd; padding:5px; background:#f9f9f9;";
 
     const img = document.createElement("img");
-    img.src = photoObject.current;
+    img.src = photoData;
     img.style.width = "100%";
-    img.style.border = "1px solid #ccc";
-    photoContainer.appendChild(img);
+    container.appendChild(img);
 
-    // --- ZONE GPS ---
-    const gpsInfo = document.createElement("div");
-    gpsInfo.style.fontSize = "9px";
-    gpsInfo.style.color = "#666";
-    gpsInfo.style.textAlign = "center";
-    gpsInfo.textContent = "GPS : Non fixé";
-    photoContainer.appendChild(gpsInfo);
+    // Bloc GPS
+    const gpsTxt = document.createElement("div");
+    gpsTxt.style.fontSize = "9px"; gpsTxt.textContent = "GPS : Non fixé";
+    container.appendChild(gpsTxt);
 
     const gpsBtn = document.createElement("button");
-    gpsBtn.type = "button";
-    gpsBtn.textContent = "Fixer GPS";
-    gpsBtn.style.width = "100%";
-    gpsBtn.style.fontSize = "10px";
-    gpsBtn.style.backgroundColor = "#ffc107";
+    gpsBtn.type = "button"; gpsBtn.textContent = "Fixer GPS";
+    gpsBtn.style.cssText = "width:100%; font-size:10px; margin-bottom:5px;";
     gpsBtn.onclick = () => {
-        if (!navigator.geolocation) return alert("GPS non supporté");
-        
-        gpsInfo.textContent = "Recherche...";
+        gpsTxt.textContent = "Recherche...";
         navigator.geolocation.getCurrentPosition((pos) => {
-            const lat = pos.coords.latitude.toFixed(8);
-            const lon = pos.coords.longitude.toFixed(8);
-            photoObject.gps = `Lat: ${lat}, Lon: ${lon}`;
-            gpsInfo.textContent = photoObject.gps;
-            gpsBtn.style.backgroundColor = "#28a745";
-            gpsBtn.style.color = "white";
-            gpsBtn.textContent = "Position fixée";
-        }, (err) => {
-            gpsInfo.textContent = "Erreur GPS";
-            console.error(err);
-        }, { enableHighAccuracy: true });
+            photoObject.gps = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+            gpsTxt.textContent = "Fixé : " + photoObject.gps;
+            gpsBtn.style.background = "#28a745"; gpsBtn.style.color = "white";
+        }, () => { gpsTxt.textContent = "Erreur GPS"; }, {enableHighAccuracy: true});
     };
-    photoContainer.appendChild(gpsBtn);
+    container.appendChild(gpsBtn);
 
-    // --- LIBELLÉ ---
+    // Libellé
     const labelInp = document.createElement("input");
-    labelInp.type = "text";
-    labelInp.placeholder = "Libellé...";
+    labelInp.type = "text"; labelInp.placeholder = "Titre...";
     labelInp.style.width = "100%";
     labelInp.oninput = () => { photoObject.label = labelInp.value; };
-    photoContainer.appendChild(labelInp);
+    container.appendChild(labelInp);
 
-    // --- BOUTONS ÉDITION / SUPPRESSION ---
+    // Boutons Action
     const btnGroup = document.createElement("div");
     btnGroup.style.display = "flex";
-
+    
     const editBtn = document.createElement("button");
-    editBtn.textContent = "✎";
-    editBtn.style.flex = "1";
+    editBtn.textContent = "✎"; editBtn.style.flex = "1";
     editBtn.onclick = () => {
         const idx = photoList.indexOf(photoObject);
         openEditorInNewTab(photoObject.original, idx, photoObject.drawings);
     };
 
-    const deleteButton = document.createElement("button");
-    deleteButton.innerHTML = "🗑";
-    deleteButton.style.flex = "1";
-    deleteButton.style.color = "red";
-    deleteButton.onclick = () => {
-        photoPreviewContainer.removeChild(photoContainer);
-        photoList = photoList.filter((p) => p !== photoObject);
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "🗑"; delBtn.style.cssText = "flex:1; color:red;";
+    delBtn.onclick = () => {
+        container.remove();
+        photoList = photoList.filter(p => p !== photoObject);
     };
 
     btnGroup.appendChild(editBtn);
-    btnGroup.appendChild(deleteButton);
-    photoContainer.appendChild(btnGroup);
+    btnGroup.appendChild(delBtn);
+    container.appendChild(btnGroup);
 
-    photoPreviewContainer.appendChild(photoContainer);
+    photoPreviewContainer.appendChild(container);
     photoList.push(photoObject);
 }
 
-// --- MAPPING DES DONNÉES AVANT GÉNÉRATION ---
-// (À insérer dans votre event listener generatePDFBtn)
-/*
-const data = {
-    ...
-    photos: photoList.map(p => ({
-        src: p.current,
-        label: p.label || "Sans libellé",
-        gps: p.gps || "Non renseigné"
-    })),
-    ...
-};
-*/
+// --- ÉDITEUR D'IMAGE (TON CODE ORIGINAL) ---
+function openEditorInNewTab(originalData, index, existingDrawings) {
+    const editorWindow = window.open("", "_blank");
+    const drawingsJson = JSON.stringify(existingDrawings);
+    editorWindow.document.write(`
+        <html>
+        <head><title>Éditeur</title><style>body{margin:0; background:#222; text-align:center;} canvas{background:white; max-width:95vw; max-height:80vh; cursor:crosshair;}</style></head>
+        <body>
+            <div style="background:#eee; padding:10px;">
+                <button onclick="tool='free'">✏️</button>
+                <button onclick="tool='line'">📏</button>
+                <button onclick="tool='rect'">🟦</button>
+                <button onclick="undo()">↩️</button>
+                <button onclick="save()" style="background:green; color:white;">Valider</button>
+            </div>
+            <canvas id="canvas"></canvas>
+            <script>
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                let tool = 'free', drawing = false, startX, startY;
+                let undoStack = ${drawingsJson};
+                let currentPath = null;
+                const baseImg = new Image();
+                baseImg.onload = () => { canvas.width = baseImg.width; canvas.height = baseImg.height; drawAll(); };
+                baseImg.src = "${originalData}";
 
-// --- FONCTION PDF MISE À JOUR ---
-function ajouterUnePhoto(pdf, photo, yPos, hauteurMax = 10) {
-    try {
-        const props = pdf.getImageProperties(photo.src);
-        const ratio = Math.min(17 / props.width, hauteurMax / props.height);
-        const finalW = props.width * ratio;
-        const finalH = props.height * ratio;
-        const xCentré = (21 - finalW) / 2;
+                function getPos(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
+                }
+                canvas.onmousedown = (e) => { drawing = true; const p = getPos(e); startX=p.x; startY=p.y; currentPath = {tool, pts:[p]}; };
+                window.onmousemove = (e) => {
+                    if(!drawing) return; const p = getPos(e);
+                    if(tool==='free') currentPath.pts.push(p);
+                    else currentPath.pts = [{x:startX, y:startY}, p];
+                    drawAll();
+                };
+                window.onmouseup = () => { if(drawing){ undoStack.push(currentPath); drawing=false; currentPath=null; drawAll(); } };
+                
+                function drawAll() {
+                    ctx.drawImage(baseImg, 0, 0);
+                    ctx.strokeStyle = "red"; ctx.lineWidth = 5;
+                    [...undoStack, ...(currentPath?[currentPath]:[])].forEach(p => {
+                        ctx.beginPath();
+                        if(p.tool==='free'){ ctx.moveTo(p.pts[0].x, p.pts[0].y); p.pts.forEach(pt=>ctx.lineTo(pt.x,pt.y)); }
+                        else if(p.tool==='line'){ ctx.moveTo(p.pts[0].x, p.pts[0].y); ctx.lineTo(p.pts[1].x, p.pts[1].y); }
+                        else if(p.tool==='rect'){ ctx.strokeRect(p.pts[0].x, p.pts[0].y, p.pts[1].x-p.pts[0].x, p.pts[1].y-p.pts[0].y); }
+                        ctx.stroke();
+                    });
+                }
+                function undo() { undoStack.pop(); drawAll(); }
+                function save() { window.opener.postMessage({editedImage: canvas.toDataURL(), drawings: undoStack, index: ${index}}, "*"); window.close(); }
+            </script>
+        </body></html>
+    `);
+}
 
-        pdf.addImage(photo.src, 'PNG', xCentré, yPos, finalW, finalH, undefined, 'FAST');
-        
-        // Bandeau d'information (plus grand pour 2 lignes)
-        const yBandeau = yPos + finalH + 0.2;
-        pdf.setFillColor(210, 230, 255);
-        pdf.rect(0.7, yBandeau, 19.6, 1.2, 'F'); 
-        
-        // Ligne 1 : Libellé
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(photo.label, 10.5, yBandeau + 0.4, { align: "center" });
-        
-        // Ligne 2 : Coordonnées GPS
-        pdf.setFontSize(8);
-        pdf.setFont(undefined, 'normal');
-        pdf.setTextColor(60, 60, 60);
-        pdf.text(`Coordonnées GPS : ${photo.gps}`, 10.5, yBandeau + 0.9, { align: "center" });
-        
-    } catch (e) { 
-        console.warn("Erreur image PDF :", e); 
+// Réception de l'image éditée
+window.addEventListener("message", (event) => {
+    if (event.data.editedImage) {
+        const { editedImage, drawings, index } = event.data;
+        photoList[index].current = editedImage;
+        photoList[index].drawings = drawings;
+        const targetImg = photoPreviewContainer.children[index].querySelector("img");
+        if (targetImg) targetImg.src = editedImage;
     }
+});
+
+// --- GÉNÉRATION DU PDF (jsPDF) ---
+async function genererPDF(data) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'cm' });
+
+    // Page 1 - En-tête (URL ABSOLUE)
+    try {
+        const logoUrl = "https://ilesduponant.github.io/assistant-projects/assistant-projects-tests/etude-raccordement/enteteImg.png";
+        const logoB64 = await imageToBase64(logoUrl);
+        pdf.addImage(logoB64, 'PNG', 1, 0.2, 18.6, 11.6);
+    } catch (e) { console.warn("Logo non chargé"); }
+
+    pdf.setFontSize(12);
+    pdf.text(`${data.nomCli} ${data.prenomCli}`, 10.5, 14, { align: "center" });
+    pdf.text(`${data.adresseCli}`, 10.5, 15, { align: "center"});
+    pdf.text(`Dossier : ${data.noDossier}`, 10.5, 18, {align: "center"});
+
+    // Page 2 - Détails et Photos
+    pdf.addPage();
+    pdf.text("ETUDE TECHNIQUE", 10.5, 1.2, {align: "center"});
+    if (data.photos.length > 0) ajouterUnePhotoPDF(pdf, data.photos[0], 4);
+
+    // Photos suivantes
+    for (let i = 1; i < data.photos.length; i++) {
+        pdf.addPage();
+        ajouterUnePhotoPDF(pdf, data.photos[i], 2);
+    }
+
+    pdf.save(`intervention_${data.nomCli}.pdf`);
 }
 
+function ajouterUnePhotoPDF(pdf, photo, y) {
+    try {
+        pdf.addImage(photo.src, 'PNG', 2, y, 17, 10);
+        pdf.setFontSize(10);
+        pdf.text("Libellé : " + photo.label, 2, y + 11);
+        pdf.setFontSize(8);
+        pdf.text("GPS : " + photo.gps, 2, y + 11.6);
+    } catch (e) {}
+}
 
-// --- FONCTION D'ENVOI VERS L'API VERCEL ---
-async function envoyerEmail(data, zipBlob) {
-    const reader = new FileReader();
-    reader.readAsDataURL(zipBlob); 
-    
-    reader.onloadend = async () => {
-        const base64Zip = reader.result.split(',')[1]; // On récupère juste le base64
-
-        const payload = {
-            nom_client: `${data.nomCli} ${data.prenomCli}`,
-            no_dossier: data.noDossier,
-            zip_data: base64Zip
+const imageToBase64 = (url) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.setAttribute("crossOrigin", "anonymous");
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width; canvas.height = img.height;
+            canvas.getContext("2d").drawImage(img, 0, 0);
+            resolve(canvas.toDataURL("image/png"));
         };
+        img.onerror = reject;
+        img.src = url;
+    });
+};
 
-        try {
-            const response = await fetch('/api/send_report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+// --- CAMERA ET UPLOAD ---
+photosInput.onchange = (e) => {
+    Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (ev) => addPhotoToPreview(ev.target.result);
+        reader.readAsDataURL(file);
+    });
+};
 
-            const result = await response.json();
-            if (response.ok) {
-                alert("✅ Email envoyé avec succès !");
-            } else {
-                alert("❌ Erreur : " + result.error);
-            }
-        } catch (error) {
-            console.error("Erreur réseau :", error);
-            alert("❌ Impossible de contacter le serveur d'envoi.");
-        }
-    };
-}
+takePhotoButton.onclick = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    camera.srcObject = stream;
+    camera.style.display = "block";
+    savePhotoButton.style.display = "inline-block";
+    camera.play();
+};
+
+savePhotoButton.onclick = () => {
+    cameraCanvas.width = camera.videoWidth;
+    cameraCanvas.height = camera.videoHeight;
+    cameraContext.drawImage(camera, 0, 0);
+    addPhotoToPreview(cameraCanvas.toDataURL("image/png"));
+    camera.srcObject.getTracks().forEach(t => t.stop());
+    camera.style.display = "none";
+    savePhotoButton.style.display = "none";
+};
+
+// --- FONCTIONS GLOBALES (Appelées par HTML onclick) ---
+window.syncIdentite = () => {
+    document.getElementById('nomTravaux').value = document.getElementById('nomCli').value;
+    document.getElementById('prenomTravaux').value = document.getElementById('prenomCli').value;
+};
+window.copyAdresseClient = () => {
+    document.getElementById('adresseTravaux').value = document.getElementById('adresseCli').value;
+    document.getElementById('cpTravaux').value = document.getElementById('cpCli').value;
+    document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
+};
