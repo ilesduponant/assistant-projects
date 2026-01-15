@@ -276,13 +276,13 @@ document.getElementById("generatePDF").onclick = async (e) => {
     </script>
 </body>
 </html>`;
-        
+        zip.file("CONSULTATION.html", htmlContent); 
         const zip = new JSZip();
         data.photos.forEach((p, i) => {
             const base64Content = p.current.split(',')[1];
             zip.file(`photo_${i}.png`, base64Content, {base64: true});
         });
-        const zipBlob = await zip.generateAsync({type: "blob"});
+        const base64Zip = await zip.generateAsync({type: "base64"});
         
         const reader = new FileReader();
         reader.readAsDataURL(zipBlob);
@@ -290,15 +290,14 @@ document.getElementById("generatePDF").onclick = async (e) => {
             const base64Zip = reader.result.split(',')[1];
             try {
                 const response = await fetch('https://assistant-projects.vercel.app/api/send_report', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nom_client: `${data.nomCli} ${data.prenomCli}`,
-                        no_dossier: data.noDossier,
-                        zip_data: base64Zip
-                    })
-                });
-                if (response.ok) alert("✅ Envoyé !");
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        nom_client: `${data.nomCli} ${data.prenomCli}`,
+        no_dossier: data.noDossier,
+        zip_data: base64Zip // On utilise directement la chaîne produite
+    })
+});                if (response.ok) alert("✅ Envoyé !");
                 else alert("❌ Erreur d'envoi");
             } catch (err) {
                 alert("❌ Erreur réseau");
