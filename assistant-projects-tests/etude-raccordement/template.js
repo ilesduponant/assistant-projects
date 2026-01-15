@@ -1,89 +1,172 @@
 // template.js
-
-// Cette fonction prend l'objet "data" envoyé par script.js
 const generateHTMLReport = (data) => {
-    
-    // On prépare le listing des photos en HTML avant de l'injecter
-    const photoItems = data.photos.map((p, i) => `
-        <div class="img-item">
-            <img src="photo_${i}.png">
-            <p><strong>${p.label || 'Sans titre'}</strong></p>
-            ${p.gps ? `<small style="color:gray">${p.gps}</small>` : ''}
-        </div>
-    `).join('');
-
-    // On retourne la grosse chaîne de caractères (Template Literal)
     return `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapport - ${data.noDossier}</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background: #f0f2f5; color: #1c1e21; }
-        .container { max-width: 900px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 25px; }
-        h1 { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-        .label { font-weight: 600; color: #606770; }
-        .val { font-weight: bold; color: #1c1e21; font-size: 1.1em; }
-        
-        /* Bouton Copier */
-        .btn-copy { 
-            cursor: pointer; background: #e7f3ff; color: #1877f2; 
-            border: none; padding: 8px 15px; border-radius: 6px; 
-            font-weight: bold; transition: all 0.2s;
-        }
-        .btn-copy:hover { background: #dbeafe; transform: scale(1.05); }
-        .btn-copy:active { transform: scale(0.95); }
+        /* Intégration de ton CSS */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .img-item { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e4e6eb; text-align: center; }
-        img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        main {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header { text-align: center; margin-bottom: 20px; width: 100%; }
+
+        h1 { color: #007bff; margin-bottom: 10px; font-size: 1.5rem; }
+        h3 { margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+
+        .info-card { margin-bottom: 20px; }
         
-        .sig-container { text-align: right; margin-top: 30px; }
-        .sig-img { max-width: 200px; border-bottom: 1px solid #333; }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .label { font-weight: bold; color: #555; }
+        .val { font-weight: normal; color: #000; flex-grow: 1; margin-left: 10px; }
+
+        /* Bouton copier inspiré de ton style de bouton */
+        .btn-copy {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            width: auto; /* override du width 100% des boutons standards */
+            margin-bottom: 0;
+        }
+
+        .btn-copy:hover { background-color: #0056b3; }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .photo-item {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background: #fff;
+            text-align: center;
+        }
+
+        .photo-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .signature-section {
+            margin-top: 30px;
+            text-align: right;
+        }
+
+        .signature-img {
+            max-width: 200px;
+            border: 1px solid #eee;
+            margin-top: 10px;
+        }
+
+        footer { margin-top: 30px; font-size: 0.8rem; color: #888; }
+
+        hr {
+            border: none;
+            height: 3px;
+            background-color: #007bff;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h1>Rapport : ${data.noDossier}</h1>
+    <header>
+        <h1>Rapport d'Intervention</h1>
+    </header>
+
+    <main>
+        <section class="info-card">
+            <h3>Informations Dossier</h3>
             <div class="row">
-                <span><span class="label">Client :</span> <span class="val" id="copy-cli">${data.nomCli} ${data.prenomCli}</span></span>
-                <button class="btn-copy" onclick="cp('copy-cli')">Copier</button>
+                <span class="label">N° Dossier :</span>
+                <span class="val" id="dossier">${data.noDossier}</span>
+                <button class="btn-copy" onclick="cp('dossier')">Copier</button>
             </div>
             <div class="row">
-                <span><span class="label">Adresse :</span> <span class="val" id="copy-addr">${data.adresseCli}, ${data.cpCli} ${data.villeCli}</span></span>
-                <button class="btn-copy" onclick="cp('copy-addr')">Copier</button>
+                <span class="label">Client :</span>
+                <span class="val" id="client">${data.nomCli} ${data.prenomCli}</span>
+                <button class="btn-copy" onclick="cp('client')">Copier</button>
             </div>
-        </div>
+            <div class="row">
+                <span class="label">Adresse :</span>
+                <span class="val" id="adresse">${data.adresseCli}, ${data.cpCli} ${data.villeCli}</span>
+                <button class="btn-copy" onclick="cp('adresse')">Copier</button>
+            </div>
+        </section>
 
-        <h3>Photos d'intervention</h3>
-        <div class="img-grid">
-            ${photoItems}
-        </div>
+        <hr>
 
-        <div class="sig-container">
-            <p class="label">Signature du client :</p>
-            <img src="signature.png" class="sig-img">
-        </div>
-    </div>
+        <section>
+            <h3>Photos (${data.photos.length})</h3>
+            <div class="photo-grid">
+                ${data.photos.map((p, i) => `
+                    <div class="photo-item">
+                        <img src="photo_${i}.png">
+                        <p><strong>${p.label || 'Photo ' + (i + 1)}</strong></p>
+                    </div>
+                `).join('')}
+            </div>
+        </section>
+
+        <section class="signature-section">
+            <h3>Signature</h3>
+            <img src="signature.png" class="signature-img">
+            <p><small>Validé numériquement</small></p>
+        </section>
+    </main>
+
+    <footer>
+        Généré le ${new Date().toLocaleDateString('fr-FR')} - Assistant Projets
+    </footer>
 
     <script>
-        // Cette fonction s'exécute CHEZ LE DESTINATAIRE (dans son navigateur)
         function cp(id) {
             const text = document.getElementById(id).innerText;
             navigator.clipboard.writeText(text).then(() => {
                 const btn = event.target;
-                const original = btn.innerText;
+                const oldText = btn.innerText;
                 btn.innerText = "Copié !";
-                btn.style.background = "#42b72a";
-                btn.style.color = "white";
+                btn.style.backgroundColor = "#28a745";
                 setTimeout(() => {
-                    btn.innerText = original;
-                    btn.style.background = "#e7f3ff";
-                    btn.style.color = "#1877f2";
+                    btn.innerText = oldText;
+                    btn.style.backgroundColor = "#007bff";
                 }, 1500);
             });
         }
