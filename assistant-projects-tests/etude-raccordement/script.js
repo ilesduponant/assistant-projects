@@ -328,38 +328,52 @@ async function getLocation() {
         return alert("❌ La géolocalisation n'est pas supportée.");
     }
 
-    gpsInput.value = "⌛ Veuillez activer votre localisation";
+    // 1. Demande d'autorisation initiale
+    gpsInput.value = "⌛ Autorisation attendue...";
 
-    // 1. On tente une lecture rapide "à blanc" juste pour forcer le pop-up d'autorisation
-    // On ne met pas de timeout ici, on attend que l'utilisateur réponde.
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-                        
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude.toFixed(6);
-                    const lon = pos.coords.longitude.toFixed(6);
-                    gpsInput.value = `${lat}, ${lon}`;
-                    console.log("📍 Position confirmée");
-                },
-                (err) => {
-                    const lat = position.coords.latitude.toFixed(6);
-                    const lon = position.coords.longitude.toFixed(6);
-                    gpsInput.value = `${lat}, ${lon}`;
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        },
-        (error) => {
-            // Gestion du refus (Permission denied)
-            if (error.code === error.PERMISSION_DENIED) {
-                alert("❌ Vous avez refusé l'accès au GPS. Veuillez l'activer dans les paramètres de votre navigateur.");
-                gpsInput.value = "Accès refusé";
-            } else {
-                alert("❌ Erreur : " + error.message);
-                gpsInput.value = "";
-            }
-        },
-        { enableHighAccuracy: false } // Première demande moins gourmande
-    );
+    // Utilisation d'une Promesse pour "attendre" le clic de l'utilisateur
+    const getPos = (options) => new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, options);
+    });
+
+    try {
+        // ÉTAPE 1 : On attend que l'utilisateur clique sur "Autoriser"
+        const firstPos = await getPos({ enableHighAccuracy: false });
+
+        // ÉTAPE 2 : Dès que c'est autorisé, on change le message IMMEDIATEMENT
+        gpsInput.value = "🛰️ Recherche satellite..."; 
+        
+        // On attend un tout petit peu (50ms) pour forcer le navigateur à afficher le texte
+        await new Promise(r => setTimeout(r, 50));
+
+        try {
+            // ÉTAPE 3 : On lance la recherche de haute précision
+            const precisePos = await getPos({ 
+                enableHighAccuracy: true, 
+                timeout: 10000, 
+                maximumAge: 0 
+            });
+            
+            const lat = precisePos.coords.latitude.toFixed(6);
+            const lon = precisePos.coords.longitude.toFixed(6);
+            gpsInput.value = `${lat}, ${lon}`;
+            console.log("📍 Position précise obtenue");
+
+        } catch (preciseErr) {
+            // Repli sur la première position si le GPS précis est trop lent
+            console.warn("Précision GPS échouée, repli sur position réseau");
+            const lat = firstPos.coords.latitude.toFixed(6);
+            const lon = firstPos.coords.longitude.toFixed(6);
+            gpsInput.value = `${lat}, ${lon}`;
+        }
+
+    } catch (error) {
+        if (error.code === error.PERMISSION_DENIED) {
+            alert("❌ Accès refusé. Activez le GPS dans les réglages.");
+            gpsInput.value = "Accès refusé";
+        } else {
+            alert("❌ Erreur : " + error.message);
+            gpsInput.value = "Erreur GPS";
+        }
+    }
 }
