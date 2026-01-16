@@ -196,20 +196,31 @@ const generateHTMLReport = (data) => {
     </footer>
 
     <script>
-        function cp(id) {
-            const text = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = event.target;
-                const oldText = btn.innerText;
-                btn.innerText = "Copié !";
-                btn.style.backgroundColor = "#28a745";
-                setTimeout(() => {
-                    btn.innerText = oldText;
-                    btn.style.backgroundColor = "#007bff";
-                }, 1500);
-            });
-        }
-    </script>
+    function cp(element) {
+        // On récupère le texte directement de l'élément cliqué
+        const text = element.innerText || element.textContent;
+        
+        if (!text) return; // Sécurité si vide
+
+        navigator.clipboard.writeText(text).then(() => {
+            // Feedback visuel : on ajoute la classe 'copied'
+            element.classList.add('copied');
+            
+            // On change un peu le style temporairement pour confirmer
+            const originalBorder = element.style.borderColor;
+            element.style.borderColor = "#28a745";
+
+            setTimeout(() => {
+                element.classList.remove('copied');
+                element.style.borderColor = originalBorder;
+            }, 1000);
+        }).catch(err => {
+            console.error('Erreur de copie :', err);
+            // Fallback si clipboard ne marche pas
+            alert("Copie échouée, texte : " + text);
+        });
+    }
+</script>
 </body>
 </html>`;
 };
