@@ -57,8 +57,13 @@
     <input type="text" id="cpTravaux" maxlength="5" required />
     <label for="villeTravaux">Ville</label>
     <input type="text" id="villeTravaux" oninput="this.value = this.value.toUpperCase()" required />
+    <h4>Dipole</h4>
     <label for="noDipole">Numéro dipole</label>
-	<input type="integer" id="noDipole" required />
+	<input type="integer" id="noDipole" />
+	<label for="distAmont">Distance en amont du dipôle</label>
+	<input type="integer" id="distAmont" />
+    <input type="text" id="gps-input" placeholder="Coordonnées GPS" readonly>
+    <button type="button" onclick="getLocation()" title="Obtenir ma position">📍</button>
 	<label for="noPoste">Nom et n° du poste</label>
 	<input type="text" id="noPoste" required />
 		<label for="dteSouhaitee">Date souhaitée</label>

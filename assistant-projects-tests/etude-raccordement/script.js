@@ -224,13 +224,16 @@ document.getElementById("generatePDF").onclick = async (e) => {
 
     // 1. Collecte des données
     const data = {
-        nomCli: document.getElementById("nomCli").value,
-        prenomCli: document.getElementById("prenomCli").value,
-        noDossier: document.getElementById("noDossier").value,
-        adresseCli: document.getElementById("adresseCli").value,
-        cpCli: document.getElementById("cpCli").value,
-        villeCli: document.getElementById("villeCli").value,
+        nomCli: document.getElementById("nomCli").value || "",
+        prenomCli: document.getElementById("prenomCli").value || "",
+        noDossier: document.getElementById("noDossier").value || "",
+        adresseCli: document.getElementById("adresseCli").value || "",
+        cpCli: document.getElementById("cpCli").value || "",
+        villeCli: document.getElementById("villeCli").value || "",
         signature: document.getElementById("signature-representant-canvas").toDataURL(),
+	
+	noDipole: document.getElementById("noDipole").value || "",
+	noPoste: documetn.getElementById("noPoste").value || "",
         photos: photoList
     };
 
@@ -315,3 +318,46 @@ window.copyAdresseClient = () => {
     document.getElementById('cpTravaux').value = document.getElementById('cpCli').value;
     document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
 };
+
+async function getLocation() {
+    const gpsInput = document.getElementById("gps-input");
+    
+    if (!navigator.geolocation) {
+        return alert("❌ La géolocalisation n'est pas supportée.");
+    }
+
+    gpsInput.value = "⌛ Veuillez activer votre localisation";
+
+    // 1. On tente une lecture rapide "à blanc" juste pour forcer le pop-up d'autorisation
+    // On ne met pas de timeout ici, on attend que l'utilisateur réponde.
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+                        
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude.toFixed(6);
+                    const lon = pos.coords.longitude.toFixed(6);
+                    gpsInput.value = `${lat}, ${lon}`;
+                    console.log("📍 Position confirmée");
+                },
+                (err) => {
+                    const lat = position.coords.latitude.toFixed(6);
+                    const lon = position.coords.longitude.toFixed(6);
+                    gpsInput.value = `${lat}, ${lon}`;
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        },
+        (error) => {
+            // Gestion du refus (Permission denied)
+            if (error.code === error.PERMISSION_DENIED) {
+                alert("❌ Vous avez refusé l'accès au GPS. Veuillez l'activer dans les paramètres de votre navigateur.");
+                gpsInput.value = "Accès refusé";
+            } else {
+                alert("❌ Erreur : " + error.message);
+                gpsInput.value = "";
+            }
+        },
+        { enableHighAccuracy: false } // Première demande moins gourmande
+    );
+}

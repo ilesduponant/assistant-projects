@@ -104,6 +104,41 @@ const generateHTMLReport = (data) => {
             background-color: #007bff;
             margin: 20px 0;
         }
+
+.copy-zone {
+    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.copy-zone:hover {
+    border-color: #007bff;
+    background-color: #f0f7ff;
+}
+
+.copy-zone:active {
+    transform: scale(0.98);
+    background-color: #e0eefb;
+}
+
+.copy-zone.copied::after {
+    content: "Copié !";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #28a745;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    pointer-events: none;
+}
     </style>
 </head>
 <body>
@@ -116,20 +151,14 @@ const generateHTMLReport = (data) => {
             <h3>Informations Dossier</h3>
             <div class="row">
                 <span class="label">N° Dossier :</span>
-                <span class="val" id="dossier">${data.noDossier}</span>
-                <button class="btn-copy" onclick="cp('dossier')">Copier</button>
+                <span class="val">
+                  <span class="copy-zone" onclick="cp(this)">${data.noDossier}</span>
+                </span>     
             </div>
-            <div class="row">
-                <span class="label">Client :</span>
-                <span class="val" id="client">${data.nomCli} ${data.prenomCli}</span>
-                <button class="btn-copy" onclick="cp('client')">Copier</button>
-            </div>
-            <div class="row">
-                <span class="label">Adresse :</span>
-                <span class="val" id="adresse">${data.adresseCli}, ${data.cpCli} ${data.villeCli}</span>
-                <button class="btn-copy" onclick="cp('adresse')">Copier</button>
-            </div>
-        </section>
+            <div>
+	        
+	    </div>
+	</section>
 
         <hr>
 
