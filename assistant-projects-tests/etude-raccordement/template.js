@@ -155,8 +155,17 @@ const generateHTMLReport = (data) => {
                   <span class="copy-zone" onclick="cp(this)">${data.noDossier}</span>
                 </span>     
             </div>
-            <div>
-	        
+            <div class="row">
+	        <span class="label">NOM Prénom</span>
+		<span class="val">
+		  <span class="copy-zone" onclick="cp(this)">${data.nomCli}</span><span class="copy-zone" onclick="cp(this)">${data.prenomCli}</span>
+		</span>
+	    </div>
+	    <div class="row">
+	        <span class="label">Numéro de dipôle, Distance en amont du dipôle</span>
+		<span class="val">
+		  <span class="copy-zone" onclick="cp(this)">${data.noDipole}</span>, <span class="copy-zone" onclick="cp(this)">${data.distAmont}</span>
+		</span>
 	    </div>
 	</section>
 
@@ -169,7 +178,7 @@ const generateHTMLReport = (data) => {
                     <div class="photo-item">
                         <img src="photo_${i}.png">
                         <p><strong>${p.label || 'Photo ' + (i + 1)}</strong></p>
-			<p><strong>${p.gps}</strong></p>
+			<p><span class="copy-zone" onclick="cp(this)">${p.gpsLat}</span> - <span class="copy-zone" onclick="cp(this)">${p.gpsLon}</span></p>
                     </div>
                 `).join('')}
             </div>

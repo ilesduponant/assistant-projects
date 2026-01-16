@@ -79,8 +79,9 @@ function addPhotoToPreview(photoData) {
     gpsBtn.style = "width:100%; font-size:10px; background:#ffc107; cursor:pointer;";
     gpsBtn.onclick = () => {
         navigator.geolocation.getCurrentPosition((pos) => {
-            photoObject.gps = `Lat: ${pos.coords.latitude.toFixed(6)}, Lon: ${pos.coords.longitude.toFixed(6)}`;
-            gpsInfo.textContent = photoObject.gps;
+            photoObject.gpsLat = `${pos.coords.latitude.toFixed(6)}`;
+	    photoObject.gpsLon = `${pos.coords.longitude.toFixed(6)}`;
+            gpsInfo.textContent = photoObject;
             gpsBtn.style.background = "#28a745";
             gpsBtn.textContent = "Fixé ✔";
         }, () => alert("Erreur GPS"), { enableHighAccuracy: true });
@@ -233,7 +234,8 @@ document.getElementById("generatePDF").onclick = async (e) => {
         signature: document.getElementById("signature-representant-canvas").toDataURL(),
 	
 	noDipole: document.getElementById("noDipole").value || "",
-	noPoste: documetn.getElementById("noPoste").value || "",
+	distAmont: document.getElementById("distAmont").value || "",
+	noPoste: document.getElementById("noPoste").value || "",
         photos: photoList
     };
 
