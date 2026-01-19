@@ -168,7 +168,7 @@ const generateHTMLReport = (data) => {
                     <span class="copy-zone" onclick="cp(this)">${data.villeCli}</span>
                 </span>
             </div>
-            ${data.complementAdrCli ? `<div class="row"><span class="label">Complément :</span><span class="val">${data.complementAdrCli}</span></div>` : ''}
+            ${data.complementAdrCli ? `<div class="row"><span class="label">Complément :</span><span class="val"><span class="copy-zone" onclick="cp(this)">${data.complementAdrCli}</span></span></div>` : ''}
         </section>
 
         <section class="info-card">
@@ -199,7 +199,7 @@ const generateHTMLReport = (data) => {
             </div>
             <div class="row">
                 <span class="label">Longueurs :</span>
-                <span class="val">Public: ${data.longDomainePublic}m / Privé: ${data.longDomainePrive}m</span>
+                <span class="val">Public: <span class="copy-zone" onclick="cp(this)">${data.longDomainePublic}</span>m / Privé: <span class="copy-zone" onclick="cp(this)">${data.longDomainePrive}</span>m</span>
             </div>
             <div class="row">
                 <span class="label">Alimentation :</span>
@@ -224,9 +224,9 @@ const generateHTMLReport = (data) => {
             
             ${data.travauxChargeDemandeur === 'Oui' ? `
                 <div style="margin-top:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
-                    <p><strong>Dates :</strong> Prévue le ${data.datePrevue} / Réelle le ${data.dateReelle}</p>
+                    <p><strong>Dates :</strong> Prévue le ${formatDate(data.datePrevue)} / Réelle le ${formatDate(data.dateReelle)}</p>
                     <p><strong>Actions réalisées :</strong><br>${data.listeTravaux || 'Aucune'}</p>
-                    ${data.commTravaux ? `<p><strong>Commentaires :</strong><br><em>${data.commTravaux}</em></p>` : ''}
+                    ${data.commTravaux ? `<p><strong>Commentaires :</strong><br><em><span class="copy-zone" onclick="cp(this)">${data.commTravaux}</span></em></p>` : ''}
                 </div>
             ` : ''}
         </section>
@@ -273,6 +273,11 @@ const generateHTMLReport = (data) => {
             console.error('Erreur :', err);
         });
     }
+    const formatDate = (dateStr) => {
+      if (!dateStr) return "N/A";
+      const [year, month, day] = dateStr.split('-');
+      return ${day}/${month}/${year};
+    };
     </script>
 </body>
 </html>`;

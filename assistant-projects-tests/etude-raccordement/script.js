@@ -56,122 +56,90 @@ function addPhotoToPreview(photoData) {
         current: photoData,
         drawings: [],
         label: "",
-        gps: ""
+        gpsLat: null,
+        gpsLon: null
     };
 
-    const photoContainer = document.createElement("div");
-    photoContainer.className = "photo-item";
-    photoContainer.style = "display:inline-block; margin:10px; width:120px; vertical-align:top; border:1px solid #ddd; padding:5px;";
-
-    const img = document.createElement("img");
-    img.src = photoObject.current;
-    img.style.width = "100%";
-    photoContainer.appendChild(img);
-
-    const gpsInfo = document.createElement("div");
-    gpsInfo.style = "font-size:9px; color:#666; text-align:center; margin:5px 0;";
-    gpsInfo.textContent = "GPS : Non fixé";
-    photoContainer.appendChild(gpsInfo);
-
-    const gpsBtn = document.createElement("button");
-    gpsBtn.type = "button";
-    gpsBtn.textContent = "Fixer GPS";
-    gpsBtn.style = "width:100%; font-size:10px; background:#ffc107; cursor:pointer;";
-    gpsBtn.onclick = () => {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            photoObject.gpsLat = `${pos.coords.latitude.toFixed(6)}`;
-	    photoObject.gpsLon = `${pos.coords.longitude.toFixed(6)}`;
-            gpsInfo.textContent = photoObject;
-            gpsBtn.style.background = "#28a745";
-            gpsBtn.textContent = "Fixé ✔";
-        }, () => alert("Erreur GPS"), { enableHighAccuracy: true });
-    };
-    photoContainer.appendChild(gpsBtn);
-
-    const labelInp = document.createElement("input");
-    labelInp.placeholder = "Libellé...";
-    labelInp.style = "width:100%; margin-top:5px;";
-    labelInp.oninput = () => { photoObject.label = labelInp.value; };
-    photoContainer.appendChild(labelInp);
-
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Modifier";
-    editBtn.style = "width:100%; margin-top:5px;";
-    editBtn.onclick = () => {
-        const idx = photoList.indexOf(photoObject);
-        openEditorInNewTab(photoObject.original, idx, photoObject.drawings);
-    };
-    photoContainer.appendChild(editBtn);
-
-    photoPreviewContainer.appendChild(photoContainer);
-    photoList.push(photoObject);
+    photoList.push(photoObject); // On ajoute à la mémoire
+    renderPhotos(); // On demande l'affichage
 }
 
-// --- EDITEUR D'IMAGE (NOUVEL ONGLET) ---
-function openEditorInNewTab(originalData, index, existingDrawings) {
-    const editorWindow = window.open("", "_blank");
-    const drawingsJson = JSON.stringify(existingDrawings || []);
+function renderPhotos() {
+    // On vide le conteneur actuel
+    photoPreviewContainer.innerHTML = "";
 
-    editorWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Éditeur</title>
-            <style>body{margin:0;background:#1a1a1a;color:white;text-align:center;} canvas{background:white;touch-action:none;}</style>
-        </head>
-        <body>
-            <div style="padding:10px;background:#333;">
-                <button onclick="setTool('free')" id="btn-free" style="background:blue;color:white;">Crayon</button>
-                <button onclick="setTool('eraser')">Gomme</button>
-                <button onclick="undo()">Annuler</button>
-                <button onclick="save()" style="background:green;color:white;">Valider</button>
-            </div>
-            <canvas id="canvas"></canvas>
-            <script>
-                const canvas = document.getElementById("canvas");
-                const ctx = canvas.getContext("2d");
-                let tool = "free", drawing = false;
-                let undoStack = ${drawingsJson};
-                const baseImg = new Image();
-                baseImg.onload = () => {
-                    canvas.width = baseImg.naturalWidth * 0.5;
-                    canvas.height = baseImg.naturalHeight * 0.5;
-                    drawAll();
-                };
-                baseImg.src = "${originalData}";
-                
-                function drawAll() {
-                    ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
-                    undoStack.forEach(p => {
-                        ctx.beginPath();
-                        ctx.strokeStyle = p.color;
-                        ctx.lineWidth = p.size;
-                        p.pts.forEach((pt, i) => { if(i===0) ctx.moveTo(pt.x,pt.y); else ctx.lineTo(pt.x,pt.y); });
-                        ctx.stroke();
-                    });
-                }
-                function setTool(t) { tool = t; }
-                function save() {
-                    window.opener.postMessage({ editedImage: canvas.toDataURL(), index: ${index} }, "*");
-                    window.close();
-                }
-                // (Simplifié pour l'exemple, garde ta logique complète de dessin ici)
-            </script>
-        </body>
-        </html>
-    `);
+    // On parcourt la liste des photos stockées
+    photoList.forEach((photoObject, idx) => {
+        const photoContainer = document.createElement("div");
+        photoContainer.className = "photo-item";
+        photoContainer.style = "display:inline-block; margin:10px; width:120px; vertical-align:top; border:1px solid #ddd; padding:5px;";
+
+        const img = document.createElement("img");
+        // IMPORTANT : On utilise .current qui contient l'image modifiée
+        img.src = photoObject.current; 
+        img.style.width = "100%";
+        photoContainer.appendChild(img);
+
+        const gpsInfo = document.createElement("div");
+        gpsInfo.style = "font-size:9px; color:#666; text-align:center; margin:5px 0;";
+        // Affichage des coordonnées si elles existent
+        gpsInfo.textContent = photoObject.gpsLat ? `${photoObject.gpsLat}, ${photoObject.gpsLon}` : "GPS : Non fixé";
+        photoContainer.appendChild(gpsInfo);
+
+        const gpsBtn = document.createElement("button");
+        gpsBtn.type = "button";
+        gpsBtn.textContent = photoObject.gpsLat ? "Fixé ✔" : "Fixer GPS";
+        gpsBtn.style = `width:100%; font-size:10px; background:${photoObject.gpsLat ? '#28a745' : '#ffc107'}; cursor:pointer;`;
+        gpsBtn.onclick = () => {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                photoObject.gpsLat = pos.coords.latitude.toFixed(6);
+                photoObject.gpsLon = pos.coords.longitude.toFixed(6);
+                renderPhotos(); // On rafraîchit pour voir le changement
+            }, () => alert("Erreur GPS"), { enableHighAccuracy: true });
+        };
+        photoContainer.appendChild(gpsBtn);
+
+        const labelInp = document.createElement("input");
+        labelInp.placeholder = "Libellé...";
+        labelInp.value = photoObject.label || ""; // On garde le texte si déjà saisi
+        labelInp.style = "width:100%; margin-top:5px;";
+        labelInp.oninput = () => { photoObject.label = labelInp.value; };
+        photoContainer.appendChild(labelInp);
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.textContent = "Modifier";
+        editBtn.style = "width:100%; margin-top:5px;";
+        editBtn.onclick = () => {
+            // On ouvre l'éditeur avec l'image ORIGINALE et les dessins existants
+            openEditorInNewTab(photoObject.original, idx, photoObject.drawings);
+        };
+        photoContainer.appendChild(editBtn);
+
+        photoPreviewContainer.appendChild(photoContainer);
+    });
 }
-
+// --- RÉCEPTION DE L'IMAGE ÉDITÉE ---
 window.addEventListener("message", (event) => {
-    if (event.data.editedImage) {
-        const { editedImage, index } = event.data;
-        photoList[index].current = editedImage;
-        const targetImg = photoPreviewContainer.children[index].querySelector("img");
-        if (targetImg) targetImg.src = editedImage;
+    // Sécurité : On vérifie que les données attendues sont présentes
+    if (event.data && event.data.editedImage) {
+        const idx = event.data.index;
+        
+        // Mise à jour de la photo spécifique dans la liste
+        if (photoList[idx]) {
+            // On remplace l'image actuelle par la version annotée
+            photoList[idx].current = event.data.editedImage;
+            
+            // On sauvegarde le stack de dessins (points, formes) 
+            // pour pouvoir ré-éditer sans repartir de zéro
+            photoList[idx].drawings = event.data.drawings; 
+            
+            renderPhotos(); 
+            
+            console.log(`Photo ${idx} mise à jour avec succès.`);
+        }
     }
-});
-
-// --- SIGNATURE & INITIALISATION ---
+}, false);// --- SIGNATURE & INITIALISATION ---
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("signature-representant-canvas");
     const ctx = canvas.getContext("2d");
