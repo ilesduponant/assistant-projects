@@ -55,7 +55,7 @@
     <label for="nomPosteHTABT">Nom du poste HTA/BT</label>
     <input type="text" id="nomPosteHTABT" />
     <label for="codeGDOPosteHTABT">Code GDO du poste HTA/BT</label>
-    <input type="integer" id="codeGDOPosteHTABT" />
+    <input type="integer" id="codeGDOPosteHTABT" required />
 <hr />
 <h3>Raccordement</h3>
 <label for="techBranchement">Technique de branchement</label>
@@ -68,10 +68,11 @@
   <option value="Liaison publique souterraine">Liaison publique souterraine</option>
   <option value="Liaison publique aéro-souterraine">Liaison publique aéro-souterraine</option>
 </select>
-<label>Type de branchement</label>
+<label class="req-group">Type de branchement</label>
 <div class="radio-group">
+    <!-- si un input radio es obligatoire, tous ceux du même nom le deviennent -->
     <div class="radio-item">
-        <input type="radio" id="T1" name="typeBranchement" value="Type 1">
+        <input type="radio" id="T1" name="typeBranchement" value="Type 1" required>
         <label for="T1">Type 1</label>
     </div>
     <div class="radio-item">
@@ -89,20 +90,24 @@
     <input type="text" id="longDomainePrive" required style="width: 90%; margin: 0;">
     <span>m</span>
 </div>
-<label>Tranchée et fourreau fournis par le demandeur</label>
+<label class="req-group">Tranchée et fourreau fournis par le demandeur</label>
 <div class="radio-group">
     <div class="radio-item">
-        <input type="radio" id="oui" name="trancheeEtFourreau" value="Oui">
+        <input type="radio" id="oui" name="trancheeEtFourreau" value="Oui" required>
         <label for="oui">Oui</label>
     </div>
     <div class="radio-item">
         <input type="radio" id="non" name="trancheeEtFourreau" value="Non">
         <label for="non">Non</label>
     </div>
+    <div class="radio-item">
+	    <input type="radio" id="derivation" name="trancheeEtFourreau" value="Dérivation individuelle réalisée par le client">
+	    <label for="derivation">Dérivation individuelle réalisée par le client</label>
+    </div>
 </div>
 <h3>Chiffrage</h3>
 <label for="domaineIntervention">Domaine d'intervention</label>
-<select id="domaineIntervention" onchange="this.style.width = (this.options[this.selectedIndex].text.length + 3) + 'ch'">
+<select id="domaineIntervention" onchange="this.style.width = (this.options[this.selectedIndex].text.length + 3) + 'ch'" required >
   <option value="" disabled selected >Sélectionnez un domaine d'intervention</option>
   <option value="Dérivation individuelle + Liaison réseau" >Dérivation individuelle + Liaison réseau</option>
   <option value="Dérivation individuelle" >Dérivation individuelle</option>
@@ -113,7 +118,7 @@
   <option value="Sans IRVE">Sans IRVE</option>
   <option value="IRVE">IRVE</option>
 </select>
-<label>Schéma directeur IRVE validé</label>
+<label class="req-group">Schéma directeur IRVE validé</label>
 <div class="radio-group">
     <div class="radio-item">
         <input type="radio" id="ouiIRVE" name="schemaIRVE" value="Oui">
@@ -124,7 +129,7 @@
         <label for="nonIRVE">Non</label>
     </div>
 </div>
-<label>Nombre de phases en consomation</label>
+<label class="req-group">Nombre de phases en consomation</label>
 <div class="radio-group">
     <div class="radio-item">
         <input type="radio" id="monophase" name="nbPhasesConso" value="Monophasé">
@@ -135,7 +140,7 @@
         <label for="triphase">Triphasé</label>
     </div>
 </div>
-<select id="puissanceRaccordement">
+<select id="puissanceRaccordement" required>
   <!-- géré par la fonction updatePuissance -->
 </select>
 <h3>Détails des travaux</h3>

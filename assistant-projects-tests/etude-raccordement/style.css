@@ -377,3 +377,28 @@ select option:first-child {
     touch-action: none; /* Bloque le scroll au doigt sur le canvas */
     cursor: crosshair;
 }
+
+/* Si un label est suivi d'un élément qui a l'attribut required */
+label:has(+ input[required])::after,
+label:has(+ select[required])::after,
+label:has(+ .radio-group[required])::after {
+    content: " *";
+    color: #ff0000; /* Rouge EDF */
+    font-weight: bold;
+    margin-left: 4px;
+}
+
+/* Cible spécifiquement le titre du groupe */
+.req-group::after {
+    content: " *";
+    color: #ff0000;
+    font-weight: bold;
+    margin-left: 4px;
+}
+
+/* Optionnel : si tu veux que le titre se comporte comme un bloc */
+.req-group {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}

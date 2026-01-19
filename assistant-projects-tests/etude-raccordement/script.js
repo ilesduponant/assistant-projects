@@ -211,12 +211,38 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- GENERATION PDF & ENVOI ---
 document.getElementById("generatePDF").onclick = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
     if (!hasSignature) return alert("⚠️ Signature obligatoire !");
 
     const btn = e.target;
     btn.disabled = true;
     btn.textContent = "⌛ Traitement...";
 
+	function validateForm() {
+    // 1. On récupère tous les champs qui ont l'attribut 'required'
+    const requiredFields = document.querySelectorAll("[required]");
+    let missingFields = [];
+
+    requiredFields.forEach(field => {
+        // On vérifie si c'est vide (on enlève les espaces avec trim)
+        if (!field.value.trim()) {
+            // On récupère le nom du champ pour l'alerte (via le label ou l'id)
+            const label = field.previousElementSibling?.innerText || field.id;
+            missingFields.push(label);
+            field.style.border = "2px solid red"; // Petit retour visuel
+        } else {
+            field.style.border = ""; // On remet normal si c'est bon
+        }
+    });
+
+    // 2. Si des champs manquent, on arrête tout
+    if (missingFields.length > 0) {
+        alert("⚠️ Erreur : Les champs suivants sont obligatoires :\n- " + missingFields.join("\n- "));
+        return false; // Bloque la suite
+    }
+
+    return true; // Tout est OK
+}
     // 1. Collecte des données
     // --- COLLECTE DES DONNÉES COMPLÈTE ---
 const data = {
