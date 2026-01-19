@@ -35,41 +35,157 @@
 	<label for="complementAdrCli">Complément d'adresse</label>
 	<textarea id="complementAdrCli" rows="3"></textarea>
 	<label for="noDossier">Numéro de dossier OSR</label>
-	<input type="integer" id="noDossier" maxlenght="64" required />
+	<input type="integer" id="noDossier" maxlenght="64" oninput="this.value = this.value.toUpperCase()" required />
 <hr />
-<h3>Coordonnées des travaux</h3>
-<div id="sectionTravaux">
-    <label for="nomTravaux">Nom</label>
-    <input type="text" id="nomTravaux" oninput="this.value = this.value.toUpperCase()" required />
-    
-    <label for="prenomTravaux">Prénom</label>
-    <input type="text" id="prenomTravaux" required />
-    <button type="button" onclick="syncIdentite()" style="margin-top: 10px">
-    <i class="fas fa-copy"></i> Identique au nom du client</button>
-    <label for="adresseTravaux">Adresse (Travaux)</label>
-    <input type="text" id="adresseTravaux" required />
-    <button type="button" onclick="copyAdresseClient()" style="margin-bottom: 10px;">
-    <i class="fas fa-copy"></i> Identique à l'adresse client
-</button>
-    <label for="complementAdrTravaux">Complément d'adresse</label>
-    <textarea id="complementAdrTravaux" rows="2"></textarea>
-    <label for="cpTravaux">Code postal</label>
-    <input type="text" id="cpTravaux" maxlength="5" required />
-    <label for="villeTravaux">Ville</label>
-    <input type="text" id="villeTravaux" oninput="this.value = this.value.toUpperCase()" required />
-    <h4>Dipole</h4>
-    <label for="noDipole">Numéro dipole</label>
+<h3>Données sur le réseau</h3>
+        <label for="noDipole">Numéro dipole</label>
 	<input type="integer" id="noDipole" />
 	<label for="distAmont">Distance en amont du dipôle</label>
 	<input type="integer" id="distAmont" />
-    <input type="text" id="gps-input" placeholder="Coordonnées GPS" readonly>
+        <label for="gps-input">Point gps du dipôle</label>
+    <input type="text" id="gps-input" placeholder="Coordonnées GPS" readonly />
     <button type="button" onclick="getLocation()" title="Obtenir ma position">📍</button>
-	<label for="noPoste">Nom et n° du poste</label>
-	<input type="text" id="noPoste" required />
-		<label for="dteSouhaitee">Date souhaitée</label>
-	<input type="date" id="dteSouhaitee" required />
-</div>
+    <label for="nomDepartBT">Nom du départ BT</label>
+    <input type="text" id="nomDepartBT" />
+    <label for="codeGDODepartBT">Code GDO départ BT</label>
+    <input type="integer" id="codeGDODepartBT" />
+    <label for="nomPosteHTABT">Nom du poste HTA/BT</label>
+    <input type="text" id="nomPosteHTABT" />
+    <label for="codeGDOPosteHTABT">Code GDO du poste HTA/BT</label>
+    <input type="integer" id="codeGDOPosteHTABT" />
 <hr />
+<h3>Raccordement</h3>
+<label for="techBranchement">Technique de branchement</label>
+<select id="techBranchement" onchange="this.style.width = (this.options[this.selectedIndex].text.length + 3) + 'ch'" required>
+  <option value="" disabled selected >Selectionnez une technique de branchement</option>
+  <option value="Branchement complet aérien">Branchement complet aérien</option>
+  <option value="Branchement complet aéro-souterrain">Branchement complet aéro-souterrain</option>
+  <option value="Branchement complet souterrain">Branchement complet souterrain</option>
+  <option value="Liaison privative">Liaison privative</option>
+  <option value="Liaison publique souterraine">Liaison publique souterraine</option>
+  <option value="Liaison publique aéro-souterraine">Liaison publique aéro-souterraine</option>
+</select>
+<label>Type de branchement</label>
+<div class="radio-group">
+    <div class="radio-item">
+        <input type="radio" id="T1" name="typeBranchement" value="Type 1">
+        <label for="T1">Type 1</label>
+    </div>
+    <div class="radio-item">
+        <input type="radio" id="T2" name="typeBranchement" value="Type 2">
+        <label for="T2">Type 2</label>
+    </div>
+</div>
+<label for="longDomainePublic">Longueur en domaine public</label>
+<div style="display: flex; align-items: center; gap: 5px;">
+    <input type="text" id="longDomainePublic" required style="width: 90%; margin: 0;">
+    <span>m</span>
+</div>
+<label for="longDomainePrive">Longueur en domaine privé</label>
+<div style="display: flex; align-items: center; gap: 5px;">
+    <input type="text" id="longDomainePrive" required style="width: 90%; margin: 0;">
+    <span>m</span>
+</div>
+<label>Tranchée et fourreau fournis par le demandeur</label>
+<div class="radio-group">
+    <div class="radio-item">
+        <input type="radio" id="oui" name="trancheeEtFourreau" value="Oui">
+        <label for="oui">Oui</label>
+    </div>
+    <div class="radio-item">
+        <input type="radio" id="non" name="trancheeEtFourreau" value="Non">
+        <label for="non">Non</label>
+    </div>
+</div>
+<h3>Chiffrage</h3>
+<label for="domaineIntervention">Domaine d'intervention</label>
+<select id="domaineIntervention" onchange="this.style.width = (this.options[this.selectedIndex].text.length + 3) + 'ch'">
+  <option value="" disabled selected >Sélectionnez un domaine d'intervention</option>
+  <option value="Dérivation individuelle + Liaison réseau" >Dérivation individuelle + Liaison réseau</option>
+  <option value="Dérivation individuelle" >Dérivation individuelle</option>
+  <option value="Liaison réseau" >Liaison réseau</option>
+</select>
+<label for="IRVE">IRVE</label>
+<select id='IRVE'>
+  <option value="Sans IRVE">Sans IRVE</option>
+  <option value="IRVE">IRVE</option>
+</select>
+<label>Schéma directeur IRVE validé</label>
+<div class="radio-group">
+    <div class="radio-item">
+        <input type="radio" id="ouiIRVE" name="schemaIRVE" value="Oui">
+        <label for="ouiIRVE">Oui</label>
+    </div>
+    <div class="radio-item">
+        <input type="radio" id="nonIRVE" name="schemaIRVE" value="Non">
+        <label for="nonIRVE">Non</label>
+    </div>
+</div>
+<label>Nombre de phases en consomation</label>
+<div class="radio-group">
+    <div class="radio-item">
+        <input type="radio" id="monophase" name="nbPhasesConso" value="Monophasé">
+        <label for="monophase">Monophasé</label>
+    </div>
+    <div class="radio-item">
+        <input type="radio" id="triphase" name="nbPhasesConso" value="Triphasé">
+        <label for="triphase">Triphasé</label>
+    </div>
+</div>
+<select id="puissanceRaccordement">
+  <!-- géré par la fonction updatePuissance -->
+</select>
+<h3>Détails des travaux</h3>
+<label>Local d'habitation de plus de 2 ans</label>
+<div class="radio-group">
+    <div class="radio-item">
+        <input type="radio" id="ouiLocal" name="localHabitation" value="Oui">
+        <label for="ouiLocal">Oui</label>
+    </div>
+    <div class="radio-item">
+        <input type="radio" id="nonLocal" name="localHabitation" value="Non">
+        <label for="nonLocal">Non</label>
+    </div>
+</div>
+<label>Travaux à la charge du demandeur</label>
+<div class="radio-group">
+    <div class="radio-item">
+        <input type="radio" id="ouiDemandeur" name="travauxChargeDemandeur" onchange="toggleTravaux()" value="Oui">
+        <label for="ouiDemandeur">Oui</label>
+    </div>
+    <div class="radio-item">
+        <input type="radio" id="nonDemandeur" name="travauxChargeDemandeur" onchange="toggleTravaux()" value="Non">
+        <label for="nonDemandeur">Non</label>
+    </div>
+</div>
+<div id="sectionTravaux" style="display: none;">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+        <div style="flex: 1; min-width: 200px;">
+            <label for="datePrevue">Fin des travaux prévue le :</label>
+            <input type="date" id="datePrevue" style="width: 100%;">
+        </div>
+        <div style="flex: 1; min-width: 200px;">
+            <label for="dateReelle">Fin des travaux réelle le :</label>
+            <input type="date" id="dateReelle" style="width: 100%;">
+        </div>
+    </div>
+    <label>Travaux à la charge du demandeur</label>
+<div class="checkbox-list">
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Réalisation d'une tranchée</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Pose de fourreau</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Reprise de l'installation existante</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Réalisation d'une saignée dans le mur</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Confection d'une niche dans un mur</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Réalisation d'un crépi pour une surface plane à l'emplacement du panneau de comptage</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Matérialisation de l'emplacement de la borne dans la clôture</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Dégagement de l'emplacement du tableau de comptage</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Encastrement du coffret extérieur de comptage</label><hr />
+	<label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Pose du socle support ou borne au sol</label><hr />
+    <label class="checkbox-item"><input type="checkbox" name="listeTravaux" value=""> Fourniture pose d'une protection mécanique complémentaire pour le coffret extérieur</label>
+</div>
+    <label for="commTravaux">Commentaires sur les travaux :</label>
+    <textarea id="commTravaux" rows="3"></textarea>
+</div><hr />
         <h2>Gestion des photos</h2>
         <input type="file" id="photos" accept="image/*" multiple>
         <button type="button" id="take-photo">📷 Prendre une photo</button>
@@ -83,19 +199,17 @@
         <h3>Aperçu des photos</h3>
         <div id="photo-preview"></div>
 
-	<label for="travauxCli">Travaux à réaliser par le <span style="text-decoration:underline"> client</span></label>
-	<textarea id="travauxCli" rows="4"></textarea>
-	<label for="travauxEdf">Travaux à réaliser par <span style="color:red"> EDF</span></label>
-	<textarea id="travauxEdf" rows="4"></textarea>
 	<hr />
+	<!--
 	<h3>Etude du branchement électrique</h3>
 	<label for="energieUtil">Energie utilisée</label>
-        <select id="energieUtil" required>
+        <select id="energieUtil" onchange="this.style.width = (this.options[this.selectedIndex].text.length + 3) + 'ch'" required>
             <option value="" disabled selected>Sélectionnez un type d'énergie</option>
             <option value="conso">consomation</option>
             <option value="prod">production</option>
         </select>
         <hr />
+	-->
         <h3>Signature de l'agent EDF</h3>
 	<canvas id="signature-representant-canvas" ></canvas>
 	<button type="button" id="clear-representant" class="remove-sign" >Effacer</button>

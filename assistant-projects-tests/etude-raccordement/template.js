@@ -148,26 +148,88 @@ const generateHTMLReport = (data) => {
 
     <main>
         <section class="info-card">
-            <h3>Informations Dossier</h3>
+            <h3>Informations Dossier & Client</h3>
             <div class="row">
                 <span class="label">N° Dossier :</span>
-                <span class="val">
-                  <span class="copy-zone" onclick="cp(this)">${data.noDossier}</span>
-                </span>     
+                <span class="val"><span class="copy-zone" onclick="cp(this)">${data.noDossier}</span></span>      
             </div>
             <div class="row">
-	        <span class="label">NOM Prénom</span>
-		<span class="val">
-		  <span class="copy-zone" onclick="cp(this)">${data.nomCli}</span><span class="copy-zone" onclick="cp(this)">${data.prenomCli}</span>
-		</span>
-	    </div>
-	    <div class="row">
-	        <span class="label">Numéro de dipôle, Distance en amont du dipôle</span>
-		<span class="val">
-		  <span class="copy-zone" onclick="cp(this)">${data.noDipole}</span>, <span class="copy-zone" onclick="cp(this)">${data.distAmont}</span>
-		</span>
-	    </div>
-	</section>
+                <span class="label">Client :</span>
+                <span class="val">
+                    <span class="copy-zone" onclick="cp(this)">${data.nomCli}</span> 
+                    <span class="copy-zone" onclick="cp(this)">${data.prenomCli}</span>
+                </span>
+            </div>
+            <div class="row">
+                <span class="label">Adresse :</span>
+                <span class="val">
+                    <span class="copy-zone" onclick="cp(this)">${data.adresseCli}</span>, 
+                    <span class="copy-zone" onclick="cp(this)">${data.cpCli}</span> 
+                    <span class="copy-zone" onclick="cp(this)">${data.villeCli}</span>
+                </span>
+            </div>
+            ${data.complementAdrCli ? `<div class="row"><span class="label">Complément :</span><span class="val">${data.complementAdrCli}</span></div>` : ''}
+        </section>
+
+        <section class="info-card">
+            <h3>Données Réseau</h3>
+            <div class="row">
+                <span class="label">Dipôle :</span>
+                <span class="val">N° <span class="copy-zone" onclick="cp(this)">${data.noDipole}</span> (Amont : <span class="copy-zone" onclick="cp(this)">${data.distAmont}</span>m)</span>
+            </div>
+            <div class="row">
+                <span class="label">Point GPS :</span>
+                <span class="val"><span class="copy-zone" onclick="cp(this)">${data.gps}</span></span>
+            </div>
+            <div class="row">
+                <span class="label">Poste HTA/BT :</span>
+                <span class="val">${data.nomPosteHTABT} (<span class="copy-zone" onclick="cp(this)">${data.codeGDOPosteHTABT}</span>)</span>
+            </div>
+            <div class="row">
+                <span class="label">Départ BT :</span>
+                <span class="val">${data.nomDepartBT} (<span class="copy-zone" onclick="cp(this)">${data.codeGDODepartBT}</span>)</span>
+            </div>
+        </section>
+
+        <section class="info-card">
+            <h3>Technique & Chiffrage</h3>
+            <div class="row">
+                <span class="label">Technique :</span>
+                <span class="val">${data.techBranchement} (${data.typeBranchement})</span>
+            </div>
+            <div class="row">
+                <span class="label">Longueurs :</span>
+                <span class="val">Public: ${data.longDomainePublic}m / Privé: ${data.longDomainePrive}m</span>
+            </div>
+            <div class="row">
+                <span class="label">Alimentation :</span>
+                <span class="val">${data.nbPhasesConso} - ${data.puissanceRaccordement}</span>
+            </div>
+            <div class="row">
+                <span class="label">Domaine / IRVE :</span>
+                <span class="val">${data.domaineIntervention} / ${data.IRVE} (Schéma validé : ${data.schemaIRVE})</span>
+            </div>
+        </section>
+
+        <section class="info-card">
+            <h3>Détails des Travaux</h3>
+            <div class="row">
+                <span class="label">Habitation +2 ans :</span>
+                <span class="val">${data.localHabitation}</span>
+            </div>
+            <div class="row">
+                <span class="label">Charge demandeur :</span>
+                <span class="val">${data.travauxChargeDemandeur}</span>
+            </div>
+            
+            ${data.travauxChargeDemandeur === 'Oui' ? `
+                <div style="margin-top:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
+                    <p><strong>Dates :</strong> Prévue le ${data.datePrevue} / Réelle le ${data.dateReelle}</p>
+                    <p><strong>Actions réalisées :</strong><br>${data.listeTravaux || 'Aucune'}</p>
+                    ${data.commTravaux ? `<p><strong>Commentaires :</strong><br><em>${data.commTravaux}</em></p>` : ''}
+                </div>
+            ` : ''}
+        </section>
 
         <hr>
 
@@ -178,49 +240,40 @@ const generateHTMLReport = (data) => {
                     <div class="photo-item">
                         <img src="photo_${i}.png">
                         <p><strong>${p.label || 'Photo ' + (i + 1)}</strong></p>
-			<p><span class="copy-zone" onclick="cp(this)">${p.gpsLat}</span> - <span class="copy-zone" onclick="cp(this)">${p.gpsLon}</span></p>
+                        <p><small class="copy-zone" onclick="cp(this)">${p.gps || 'Pas de coordos'}</small></p>
                     </div>
                 `).join('')}
             </div>
         </section>
 
         <section class="signature-section">
-            <h3>Signature</h3>
+            <h3>Signature de l'agent</h3>
             <img src="signature.png" class="signature-img">
-            <p><small>Validé numériquement</small></p>
+            <p><small>Document validé numériquement le ${new Date().toLocaleDateString('fr-FR')}</small></p>
         </section>
     </main>
 
     <footer>
-        Généré le ${new Date().toLocaleDateString('fr-FR')} - Assistant Projets
+        Généré par Assistant Projets EDF - 2026
     </footer>
 
     <script>
     function cp(element) {
-        // On récupère le texte directement de l'élément cliqué
         const text = element.innerText || element.textContent;
-        
-        if (!text) return; // Sécurité si vide
-
+        if (!text || text === "N/A") return;
         navigator.clipboard.writeText(text).then(() => {
-            // Feedback visuel : on ajoute la classe 'copied'
             element.classList.add('copied');
-            
-            // On change un peu le style temporairement pour confirmer
-            const originalBorder = element.style.borderColor;
-            element.style.borderColor = "#28a745";
-
+            const originalColor = element.style.color;
+            element.style.color = "#28a745";
             setTimeout(() => {
                 element.classList.remove('copied');
-                element.style.borderColor = originalBorder;
+                element.style.color = originalColor;
             }, 1000);
         }).catch(err => {
-            console.error('Erreur de copie :', err);
-            // Fallback si clipboard ne marche pas
-            alert("Copie échouée, texte : " + text);
+            console.error('Erreur :', err);
         });
     }
-</script>
+    </script>
 </body>
 </html>`;
 };

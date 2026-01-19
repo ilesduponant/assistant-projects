@@ -280,7 +280,7 @@ canvas {
 
 select{
   width: 100%;
-  max-width: 250px;
+  max-width: 400px;
   padding: 10px;
   font-size: 14px;
   border: 1px solid #ccc;
@@ -310,4 +310,65 @@ option {
 select option:first-child {
   font-weight: bold;
   color: #007BFF;
+}
+
+/* Conteneur principal pour mettre les groupes sur la même ligne */
+.radio-group {
+    display: flex;
+    gap: 20px;       /* Espacement entre Type 1 et Type 2 */
+    margin: 10px 0;
+    align-items: center;
+}
+
+/* Chaque bloc (bouton + texte) */
+.radio-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;        /* Espacement entre le rond et le texte */
+    cursor: pointer;
+}
+
+/* On s'assure que tes styles globaux n'écrasent pas les radios */
+.radio-item input[type="radio"] {
+    width: auto;     /* Annule le width: 100% que tu as sur les 'input' */
+    margin-bottom: 0; /* Annule la marge du bas habituelle */
+    cursor: pointer;
+}
+
+.radio-item label {
+    font-weight: normal; /* Plus léger pour les options */
+    margin: 0;           /* Annule les marges de tes labels globaux */
+    cursor: pointer;
+}
+
+/* Conteneur de la liste */
+.checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 15px 0;
+}
+
+/* Chaque ligne (Case + Label) */
+.checkbox-item {
+    display: flex;
+    align-items: center; /* Aligne verticalement au centre */
+    font-weight: normal;
+    cursor: pointer;
+}
+
+/* LA FIX : On force la case à ne pas prendre 100% */
+.checkbox-item input[type="checkbox"] {
+    width: 18px !important;  /* Taille fixe */
+    height: 18px !important;
+    margin: 0 10px 0 0 !important; /* Marge à droite uniquement */
+    flex-shrink: 0; /* Empêche la case de s'écraser */
+}
+
+/* Cible uniquement les HR à l'intérieur de ta liste */
+.checkbox-list hr {
+    border: 0;                   /* Ligne de 1px, gris très clair */
+    margin: 5px 0;               /* Espace réduit pour rester compact */
+    width: 100%;                 /* S'assure qu'il prend toute la largeur */
+    background-color: #eeeeee
 }

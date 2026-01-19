@@ -224,21 +224,57 @@ document.getElementById("generatePDF").onclick = async (e) => {
     btn.textContent = "⌛ Traitement...";
 
     // 1. Collecte des données
-    const data = {
-        nomCli: document.getElementById("nomCli").value || "",
-        prenomCli: document.getElementById("prenomCli").value || "",
-        noDossier: document.getElementById("noDossier").value || "",
-        adresseCli: document.getElementById("adresseCli").value || "",
-        cpCli: document.getElementById("cpCli").value || "",
-        villeCli: document.getElementById("villeCli").value || "",
-        signature: document.getElementById("signature-representant-canvas").toDataURL(),
-	
-	noDipole: document.getElementById("noDipole").value || "",
-	distAmont: document.getElementById("distAmont").value || "",
-	noPoste: document.getElementById("noPoste").value || "",
-        photos: photoList
-    };
-
+    // --- COLLECTE DES DONNÉES COMPLÈTE ---
+const data = {
+    // Informations client
+    nomCli: document.getElementById("nomCli").value || "",
+    prenomCli: document.getElementById("prenomCli").value || "",
+    noDossier: document.getElementById("noDossier").value || "",
+    adresseCli: document.getElementById("adresseCli").value || "",
+    cpCli: document.getElementById("cpCli").value || "",
+    villeCli: document.getElementById("villeCli").value || "",
+    complementAdrCli: document.getElementById("complementAdrCli").value || "",
+    
+    // Données sur le réseau
+    noDipole: document.getElementById("noDipole").value || "",
+    distAmont: document.getElementById("distAmont").value || "",
+    gps: document.getElementById("gps-input").value || "",
+    nomDepartBT: document.getElementById("nomDepartBT").value || "",
+    codeGDODepartBT: document.getElementById("codeGDODepartBT").value || "",
+    nomPosteHTABT: document.getElementById("nomPosteHTABT").value || "",
+    codeGDOPosteHTABT: document.getElementById("codeGDOPosteHTABT").value || "",
+    
+    // Raccordement
+    techBranchement: document.getElementById("techBranchement").value || "",
+    typeBranchement: document.querySelector('input[name="typeBranchement"]:checked')?.value || "",
+    longDomainePublic: document.getElementById("longDomainePublic").value || "",
+    longDomainePrive: document.getElementById("longDomainePrive").value || "",
+    trancheeEtFourreau: document.querySelector('input[name="trancheeEtFourreau"]:checked')?.value || "",
+    
+    // Chiffrage
+    domaineIntervention: document.getElementById("domaineIntervention").value || "",
+    IRVE: document.getElementById("IRVE").value || "",
+    schemaIRVE: document.querySelector('input[name="schemaIRVE"]:checked')?.value || "",
+    nbPhasesConso: document.querySelector('input[name="nbPhasesConso"]:checked')?.value || "",
+    puissanceRaccordement: document.getElementById("puissanceRaccordement").value || "",
+    
+    // Détails des travaux
+    localHabitation: document.querySelector('input[name="localHabitation"]:checked')?.value || "",
+    travauxChargeDemandeur: document.querySelector('input[name="travauxChargeDemandeur"]:checked')?.value || "",
+    
+    // Données de la section conditionnelle (Travaux charge demandeur)
+    datePrevue: document.getElementById("datePrevue").value || "",
+    dateReelle: document.getElementById("dateReelle").value || "",
+    // Récupération des cases cochées
+    listeTravaux: Array.from(document.querySelectorAll('input[name="listeTravaux"]:checked'))
+        .map(cb => cb.value)
+        .join(", "),
+    commTravaux: document.getElementById("commTravaux").value || "",
+    
+    // Médias et Signature
+    signature: document.getElementById("signature-representant-canvas").toDataURL(),
+    photos: photoList
+};
     try {
         // 2. Génération du PDF (optionnel)
         await genererPDF(data);
@@ -320,6 +356,51 @@ window.copyAdresseClient = () => {
     document.getElementById('cpTravaux').value = document.getElementById('cpCli').value;
     document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
 };
+
+document.getElementById('noDipole').addEventListener('input', function (e) {
+    this.value = this.value.replace(/[^0-9]/g, ''); // Supprime tout ce qui n'est pas un chiffre
+});
+
+function updatePuissance() {
+    const select = document.getElementById("puissanceRaccordement");
+    const isMono = document.getElementById("monophase").checked;
+    
+    select.innerHTML = "";
+
+    const optionsMono = ["3 kVA", "12 kVA"];
+    const optionsTri = ["3 kVA", "36 kVA"];
+
+    const activeOptions = isMono ? optionsMono : optionsTri;
+
+    select.add(new Option("Selectionnez une puissance", ""));
+
+    activeOptions.forEach(pwr => {
+        select.add(new Option(pwr, pwr));
+    });
+}
+document.addEventListener("DOMContentLoaded", () => {
+    const radios = document.querySelectorAll('input[name="nbPhasesConso"]');
+    radios.forEach(r => r.addEventListener("change", updatePuissance));
+    
+    updatePuissance();
+});
+
+function toggleTravaux() {
+    const section = document.getElementById("sectionTravaux");
+    const isOui = document.querySelector('input[name="travauxChargeDemandeur"][value="Oui"]').checked;
+    
+    section.style.display = isOui ? "block" : "none";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Synchronise auto : la value prend le texte du label
+    document.querySelectorAll('.checkbox-item').forEach(item => {
+        const input = item.querySelector('input');
+        if (input && input.value === "") {
+            input.value = item.textContent.trim();
+        }
+    });
+});
 
 async function getLocation() {
     const gpsInput = document.getElementById("gps-input");
