@@ -372,3 +372,8 @@ select option:first-child {
     width: 100%;                 /* S'assure qu'il prend toute la largeur */
     background-color: #eeeeee
 }
+
+#signature-representant-canvas {
+    touch-action: none; /* Bloque le scroll au doigt sur le canvas */
+    cursor: crosshair;
+}

@@ -139,29 +139,46 @@ window.addEventListener("message", (event) => {
             console.log(`Photo ${idx} mise à jour avec succès.`);
         }
     }
-}, false);// --- SIGNATURE & INITIALISATION ---
+}, false);
+// --- SIGNATURE & INITIALISATION ---
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("signature-representant-canvas");
     const ctx = canvas.getContext("2d");
     let drawing = false;
 
+    // Configuration du trait pour que ce soit plus fluide
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#000000";
+
     const resizeCanvas = () => {
         const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        // On ne redimensionne que si la taille a vraiment changé 
+        // pour éviter d'effacer la signature lors du scroll
+        if (canvas.width !== rect.width || canvas.height !== rect.height) {
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
     };
+    window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
     const getPos = (e) => {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: clientX - rect.left, y: clientY - rect.top };
+        return { 
+            x: e.clientX - rect.left, 
+            y: e.clientY - rect.top 
+        };
     };
 
     canvas.addEventListener("pointerdown", (e) => {
         drawing = true;
         hasSignature = true;
+        
+        // Capture le pointeur pour éviter que le scroll ne reprenne
+        canvas.setPointerCapture(e.pointerId);
+        
         const pos = getPos(e);
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
@@ -174,14 +191,23 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.stroke();
     });
 
-    canvas.addEventListener("pointerup", () => drawing = false);
+    canvas.addEventListener("pointerup", (e) => {
+        if (!drawing) return;
+        drawing = false;
+        canvas.releasePointerCapture(e.pointerId);
+    });
+
+    // Gestion de l'annulation (si on sort du canvas)
+    canvas.addEventListener("pointercancel", (e) => {
+        drawing = false;
+        canvas.releasePointerCapture(e.pointerId);
+    });
 
     document.getElementById("clear-representant").onclick = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         hasSignature = false;
     };
-}); // <--- C'ÉTAIT CETTE FERMETURE QUI MANQUAIT
-
+});
 // --- GENERATION PDF & ENVOI ---
 document.getElementById("generatePDF").onclick = async (e) => {
     e.preventDefault();
@@ -206,8 +232,9 @@ const data = {
     // Données sur le réseau
     noDipole: document.getElementById("noDipole").value || "",
     distAmont: document.getElementById("distAmont").value || "",
-    gps: document.getElementById("gps-input").value || "",
-    nomDepartBT: document.getElementById("nomDepartBT").value || "",
+    gpsLat: document.getElementById("gps-lat").value || "",
+gpsLon: document.getElementById("gps-lon").value || "",    
+	nomDepartBT: document.getElementById("nomDepartBT").value || "",
     codeGDODepartBT: document.getElementById("codeGDODepartBT").value || "",
     nomPosteHTABT: document.getElementById("nomPosteHTABT").value || "",
     codeGDOPosteHTABT: document.getElementById("codeGDOPosteHTABT").value || "",
