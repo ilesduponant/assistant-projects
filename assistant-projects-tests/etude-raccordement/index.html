@@ -43,10 +43,12 @@
 	<input type="integer" id="noDipole" />
 	<label for="distAmont">Distance en amont du dipôle</label>
 	<input type="integer" id="distAmont" />
-        <label for="gps-input">Point gps du dipôle</label>
-    <input type="text" id="gps-input" placeholder="Coordonnées GPS" readonly />
-    <button type="button" onclick="getLocation()" title="Obtenir ma position">📍</button>
-    <label for="nomDepartBT">Nom du départ BT</label>
+    <label>Point GPS du dipôle</label>
+<div style="display: flex; gap: 5px; align-items: center;">
+    <input type="text" id="gps-lat" placeholder="Latitude" readonly style="flex: 1;" />
+    <input type="text" id="gps-lon" placeholder="Longitude" readonly style="flex: 1;" />
+    <button type="button" onclick="getLocation()" title="Obtenir ma position" style="width: 44px;">📍</button>
+</div>    <label for="nomDepartBT">Nom du départ BT</label>
     <input type="text" id="nomDepartBT" />
     <label for="codeGDODepartBT">Code GDO départ BT</label>
     <input type="integer" id="codeGDODepartBT" />

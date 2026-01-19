@@ -67,13 +67,13 @@ const generateHTMLReport = (data) => {
         </span>
     </div>
 
-    <div class="row">
-        <span class="label">Point GPS :</span>
-        <span class="val">
-            <span class="copy-zone" onclick="cp(this)">${data.gps || 'Non renseigné'}</span>
-        </span>
-    </div>
-
+   <div class="row">
+    <span class="label">Point GPS :</span>
+    <span class="val">
+        Lat: <span class="copy-zone" onclick="cp(this)">${data.gpsLat || 'N/A'}</span> / 
+        Lon: <span class="copy-zone" onclick="cp(this)">${data.gpsLon || 'N/A'}</span>
+    </span>
+</div>
     <div class="row">
         <span class="label">Poste HTA/BT :</span>
         <span class="val">

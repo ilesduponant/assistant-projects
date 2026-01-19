@@ -371,58 +371,45 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function getLocation() {
-    const gpsInput = document.getElementById("gps-input");
+    const latInput = document.getElementById("gps-lat");
+    const lonInput = document.getElementById("gps-lon");
     
     if (!navigator.geolocation) {
         return alert("❌ La géolocalisation n'est pas supportée.");
     }
 
-    // 1. Demande d'autorisation initiale
-    gpsInput.value = "⌛ Autorisation attendue...";
+    latInput.value = "⌛..."; 
+    lonInput.value = "⌛...";
 
-    // Utilisation d'une Promesse pour "attendre" le clic de l'utilisateur
     const getPos = (options) => new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, options);
     });
 
     try {
-        // ÉTAPE 1 : On attend que l'utilisateur clique sur "Autoriser"
         const firstPos = await getPos({ enableHighAccuracy: false });
-
-        // ÉTAPE 2 : Dès que c'est autorisé, on change le message IMMEDIATEMENT
-        gpsInput.value = "🛰️ Recherche satellite..."; 
+        latInput.value = "🛰️ satellite...";
+        lonInput.value = "🛰️ satellite...";
         
-        // On attend un tout petit peu (50ms) pour forcer le navigateur à afficher le texte
         await new Promise(r => setTimeout(r, 50));
 
         try {
-            // ÉTAPE 3 : On lance la recherche de haute précision
             const precisePos = await getPos({ 
                 enableHighAccuracy: true, 
                 timeout: 10000, 
                 maximumAge: 0 
             });
             
-            const lat = precisePos.coords.latitude.toFixed(6);
-            const lon = precisePos.coords.longitude.toFixed(6);
-            gpsInput.value = `${lat}, ${lon}`;
-            console.log("📍 Position précise obtenue");
+            latInput.value = precisePos.coords.latitude.toFixed(6);
+            lonInput.value = precisePos.coords.longitude.toFixed(6);
 
         } catch (preciseErr) {
-            // Repli sur la première position si le GPS précis est trop lent
-            console.warn("Précision GPS échouée, repli sur position réseau");
-            const lat = firstPos.coords.latitude.toFixed(6);
-            const lon = firstPos.coords.longitude.toFixed(6);
-            gpsInput.value = `${lat}, ${lon}`;
+            latInput.value = firstPos.coords.latitude.toFixed(6);
+            lonInput.value = firstPos.coords.longitude.toFixed(6);
         }
 
     } catch (error) {
-        if (error.code === error.PERMISSION_DENIED) {
-            alert("❌ Accès refusé. Activez le GPS dans les réglages.");
-            gpsInput.value = "Accès refusé";
-        } else {
-            alert("❌ Erreur : " + error.message);
-            gpsInput.value = "Erreur GPS";
-        }
+        latInput.value = "Erreur";
+        lonInput.value = "Erreur";
+        alert("❌ Erreur GPS : " + error.message);
     }
 }
