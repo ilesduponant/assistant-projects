@@ -46,14 +46,76 @@ const generateHTMLReport = (data) => {
             <div class="row"><span class="label">N° Dossier :</span><span class="val"><span class="copy-zone" onclick="cp(this)">${data.noDossier}</span></span></div>
             <div class="row"><span class="label">Client :</span><span class="val"><span class="copy-zone" onclick="cp(this)">${data.nomCli}</span> <span class="copy-zone" onclick="cp(this)">${data.prenomCli}</span></span></div>
             <div class="row"><span class="label">Adresse :</span><span class="val"><span class="copy-zone" onclick="cp(this)">${data.adresseCli}</span>, <span class="copy-zone" onclick="cp(this)">${data.cpCli}</span> <span class="copy-zone" onclick="cp(this)">${data.villeCli}</span></span></div>
-        </section>
+     ${data.complementAdrCli ? `
+<div class="row">
+    <span class="label">Complément :</span>
+    <span class="val">
+        <span class="copy-zone" onclick="cp(this)">${data.complementAdrCli}</span>
+    </span>
+</div>
+` : ''}
+     </section>
 
-        <section class="info-card">
-            <h3>Données Réseau</h3>
-            <div class="row"><span class="label">Dipôle :</span><span class="val">N° <span class="copy-zone" onclick="cp(this)">${data.noDipole}</span> (Amont : <span class="copy-zone" onclick="cp(this)">${data.distAmont}</span>m)</span></div>
-            <div class="row"><span class="label">Point GPS :</span><span class="val"><span class="copy-zone" onclick="cp(this)">${data.gps}</span></span></div>
-        </section>
+ <section class="info-card">
+    <h3>Données Réseau</h3>
+    
+    <div class="row">
+        <span class="label">Dipôle :</span>
+        <span class="val">
+            N° <span class="copy-zone" onclick="cp(this)">${data.noDipole || 'N/A'}</span> 
+            (Amont : <span class="copy-zone" onclick="cp(this)">${data.distAmont || '0'}</span>m)
+        </span>
+    </div>
 
+    <div class="row">
+        <span class="label">Point GPS :</span>
+        <span class="val">
+            <span class="copy-zone" onclick="cp(this)">${data.gps || 'Non renseigné'}</span>
+        </span>
+    </div>
+
+    <div class="row">
+        <span class="label">Poste HTA/BT :</span>
+        <span class="val">
+            ${data.nomPosteHTABT || 'N/A'} 
+            (<span class="copy-zone" onclick="cp(this)">${data.codeGDOPosteHTABT || 'Code GDO'}</span>)
+        </span>
+    </div>
+
+    <div class="row">
+        <span class="label">Départ BT :</span>
+        <span class="val">
+            ${data.nomDepartBT || 'N/A'} 
+            (<span class="copy-zone" onclick="cp(this)">${data.codeGDODepartBT || 'Code GDO'}</span>)
+        </span>
+    </div>
+</section>
+<section class="info-card">
+    <h3>Technique & Chiffrage</h3>
+    <div class="row">
+        <span class="label">Raccordement :</span>
+        <span class="val">${data.techBranchement} (${data.typeBranchement || 'N/A'})</span>
+    </div>
+    <div class="row">
+        <span class="label">Longueurs :</span>
+        <span class="val">
+            Public : <span class="copy-zone" onclick="cp(this)">${data.longDomainePublic || '0'}</span>m / 
+            Privé : <span class="copy-zone" onclick="cp(this)">${data.longDomainePrive || '0'}</span>m
+        </span>
+    </div>
+    <div class="row">
+        <span class="label">Alimentation :</span>
+        <span class="val">${data.nbPhasesConso || 'N/A'} - ${data.puissanceRaccordement || 'N/A'}</span>
+    </div>
+    <div class="row">
+        <span class="label">Domaine / IRVE :</span>
+        <span class="val">${data.domaineIntervention} / ${data.IRVE} (Schéma : ${data.schemaIRVE || 'N/A'})</span>
+    </div>
+    <div class="row">
+        <span class="label">Tranchée/Fourreau :</span>
+        <span class="val">${data.trancheeEtFourreau || 'Non renseigné'}</span>
+    </div>
+</section>
         <section class="info-card">
             <h3>Détails des Travaux</h3>
             <div class="row"><span class="label">Charge demandeur :</span><span class="val">${data.travauxChargeDemandeur}</span></div>
@@ -73,7 +135,7 @@ const generateHTMLReport = (data) => {
                     <div class="photo-item">
                         <img src="photo_${i}.png">
                         <p><strong>${p.label || 'Photo ' + (i + 1)}</strong></p>
-                        <p><small class="copy-zone" onclick="cp(this)">${p.gpsLat ? p.gpsLat + ', ' + p.gpsLon : 'Pas de coordos'}</small></p>
+                        <p><small class="copy-zone" onclick="cp(this)">${p.gpsLon ? p.gpsLat: 'N/A'} </small>, <small class="copy-zone" onclick="cp(this)">${p.gpsLon ? p.gpsLon : 'N/A'}</small></p>
                     </div>
                 `).join('')}
             </div>
