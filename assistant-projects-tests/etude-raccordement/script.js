@@ -304,6 +304,7 @@ gpsLon: document.getElementById("gps-lon").value || "",
     schemaIRVE: document.querySelector('input[name="schemaIRVE"]:checked')?.value || "",
     nbPhasesConso: document.querySelector('input[name="nbPhasesConso"]:checked')?.value || "",
     puissanceRaccordement: document.getElementById("puissanceRaccordement").value || "",
+    puissanceSouscrite: document.getElementById("puissanceSouscrite").value || "",
     
     // Détails des travaux
     localHabitation: document.querySelector('input[name="localHabitation"]:checked')?.value || "",
@@ -441,7 +442,8 @@ function updatePuissance() {
             selectSous.add(new Option(pwr, pwr));
         });
     }
-}document.addEventListener("DOMContentLoaded", () => {
+}
+document.addEventListener("DOMContentLoaded", () => {
     const radios = document.querySelectorAll('input[name="nbPhasesConso"]');
     radios.forEach(r => r.addEventListener("change", updatePuissance));
     

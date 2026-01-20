@@ -106,6 +106,8 @@ const generateHTMLReport = (data) => {
     <div class="row">
         <span class="label">Alimentation :</span>
         <span class="val">${data.nbPhasesConso || 'N/A'} - ${data.puissanceRaccordement || 'N/A'}</span>
+	<span class="label">Puissance souhaitée :</span>
+	<span class="val">${data.puissanceSouscrite || 'N/A'}</span>
     </div>
     <div class="row">
         <span class="label">Domaine / IRVE :</span>
