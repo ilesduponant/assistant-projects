@@ -1,4 +1,3 @@
-// --- FONCTION DE FORMATEGE DATE (Disponible pour le générateur) ---
 const formatDate = (dateStr) => {
     if (!dateStr || dateStr === "") return "N/A";
     const parts = dateStr.split('-');
@@ -6,7 +5,6 @@ const formatDate = (dateStr) => {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
 
-// --- GÉNÉRATEUR DE RAPPORT ---
 const generateHTMLReport = (data) => {
     return `
 <!DOCTYPE html>
@@ -16,7 +14,6 @@ const generateHTMLReport = (data) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapport - ${data.noDossier}</title>
     <style>
-        /* ... Ton CSS inchangé ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         main { width: 100%; max-width: 800px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
