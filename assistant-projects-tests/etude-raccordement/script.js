@@ -72,54 +72,79 @@ function renderPhotos() {
     photoList.forEach((photoObject, idx) => {
         const photoContainer = document.createElement("div");
         photoContainer.className = "photo-item";
-        photoContainer.style = "display:inline-block; margin:10px; width:120px; vertical-align:top; border:1px solid #ddd; padding:5px;";
+        // Position relative indispensable pour le badge poubelle
+        photoContainer.style = "position:relative; display:inline-block; margin:15px; width:140px; vertical-align:top; border:1px solid #ddd; padding:5px; background:#fff; border-radius:5px;";
 
+        // --- 1. BOUTON POUBELLE (Badge en haut à droite) ---
+        const deleteBtn = document.createElement("div");
+        deleteBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+        deleteBtn.style = "position:absolute; top:-12px; right:-12px; background:#dc3545; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:10;";
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm("Supprimer cette photo ?")) {
+                photoList.splice(idx, 1);
+                renderPhotos();
+            }
+        };
+        photoContainer.appendChild(deleteBtn);
+
+        // --- 2. IMAGE APERÇU ---
         const img = document.createElement("img");
-        // IMPORTANT : On utilise .current qui contient l'image modifiée
         img.src = photoObject.current; 
-        img.style.width = "100%";
+        img.style = "width:100%; height:100px; object-fit:cover; border-radius:3px;";
         photoContainer.appendChild(img);
 
+        // --- 3. INFOS GPS ---
         const gpsInfo = document.createElement("div");
-        gpsInfo.style = "font-size:9px; color:#666; text-align:center; margin:5px 0;";
-        // Affichage des coordonnées si elles existent
-        gpsInfo.textContent = photoObject.gpsLat ? `${photoObject.gpsLat}, ${photoObject.gpsLon}` : "GPS : Non fixé";
+        gpsInfo.style = "font-size:9px; color:#666; text-align:center; margin:5px 0; height:12px;";
+        gpsInfo.textContent = photoObject.gpsLat ? `${photoObject.gpsLat}, ${photoObject.gpsLon}` : "Pas de GPS";
         photoContainer.appendChild(gpsInfo);
 
+        // --- 4. CHAMP LIBELLÉ ---
+        const labelInp = document.createElement("input");
+        labelInp.placeholder = "Libellé...";
+        labelInp.value = photoObject.label || "";
+        labelInp.style = "width:100%; margin-bottom:8px; font-size:11px; padding:2px; border:1px solid #ccc; border-radius:3px;";
+        labelInp.oninput = () => { photoObject.label = labelInp.value; };
+        photoContainer.appendChild(labelInp);
+
+        // --- 5. GROUPE DE BOUTONS (GPS + MODIFIER) ---
+        const actionGroup = document.createElement("div");
+        actionGroup.style = "display: flex; gap: 4px;";
+
+        // Bouton GPS (Fixer position)
         const gpsBtn = document.createElement("button");
         gpsBtn.type = "button";
-        gpsBtn.textContent = photoObject.gpsLat ? "Fixé ✔" : "Fixer GPS";
-        gpsBtn.style = `width:100%; font-size:10px; background:${photoObject.gpsLat ? '#28a745' : '#ffc107'}; cursor:pointer;`;
+        gpsBtn.innerHTML = '<i data-lucide="map-pin"></i>';
+        gpsBtn.style = `flex:1; height:32px; display:flex; align-items:center; justify-content:center; background:${photoObject.gpsLat ? '#28a745' : '#ffc107'}; color:white; border-radius:4px; border:none; cursor:pointer;`;
         gpsBtn.onclick = () => {
             navigator.geolocation.getCurrentPosition((pos) => {
                 photoObject.gpsLat = pos.coords.latitude.toFixed(6);
                 photoObject.gpsLon = pos.coords.longitude.toFixed(6);
-                renderPhotos(); // On rafraîchit pour voir le changement
+                renderPhotos(); 
             }, () => alert("Erreur GPS"), { enableHighAccuracy: true });
         };
-        photoContainer.appendChild(gpsBtn);
 
-        const labelInp = document.createElement("input");
-        labelInp.placeholder = "Libellé...";
-        labelInp.value = photoObject.label || ""; // On garde le texte si déjà saisi
-        labelInp.style = "width:100%; margin-top:5px;";
-        labelInp.oninput = () => { photoObject.label = labelInp.value; };
-        photoContainer.appendChild(labelInp);
-
+        // Bouton Modifier (Dessin)
         const editBtn = document.createElement("button");
         editBtn.type = "button";
-        editBtn.textContent = "Modifier";
-        editBtn.style = "width:100%; margin-top:5px;";
+        editBtn.innerHTML = '<i data-lucide="pen-line"></i>';
+        editBtn.style = "flex:1; height:32px; display:flex; align-items:center; justify-content:center; background:#007bff; color:white; border-radius:4px; border:none; cursor:pointer;";
         editBtn.onclick = () => {
-            // On ouvre l'éditeur avec l'image ORIGINALE et les dessins existants
             openEditorInNewTab(photoObject.original, idx, photoObject.drawings);
         };
-        photoContainer.appendChild(editBtn);
 
+        actionGroup.appendChild(gpsBtn);
+        actionGroup.appendChild(editBtn);
+        photoContainer.appendChild(actionGroup);
+
+        // On ajoute tout le container à la preview
         photoPreviewContainer.appendChild(photoContainer);
     });
-}
-// --- RÉCEPTION DE L'IMAGE ÉDITÉE ---
+
+    // TRÈS IMPORTANT : On relance Lucide une fois que tout le DOM est construit
+    lucide.createIcons();
+}// --- RÉCEPTION DE L'IMAGE ÉDITÉE ---
 window.addEventListener("message", (event) => {
     // Sécurité : On vérifie que les données attendues sont présentes
     if (event.data && event.data.editedImage) {
@@ -140,6 +165,7 @@ window.addEventListener("message", (event) => {
         }
     }
 }, false);
+
 // --- SIGNATURE & INITIALISATION ---
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("signature-representant-canvas");
@@ -383,23 +409,39 @@ document.getElementById('noDipole').addEventListener('input', function (e) {
 });
 
 function updatePuissance() {
-    const select = document.getElementById("puissanceRaccordement");
+    const selectRacc = document.getElementById("puissanceRaccordement");
+    const selectSous = document.getElementById("puissanceSouscrite");
     const isMono = document.getElementById("monophase").checked;
     
-    select.innerHTML = "";
+    if (!selectRacc) return; // Sécurité si l'élément n'existe pas encore
 
-    const optionsMono = ["3 kVA", "12 kVA"];
-    const optionsTri = ["3 kVA", "36 kVA"];
+    // On vide les sélecteurs
+    selectRacc.innerHTML = "";
+    if (selectSous) selectSous.innerHTML = "";
 
-    const activeOptions = isMono ? optionsMono : optionsTri;
-
-    select.add(new Option("Selectionnez une puissance", ""));
-
-    activeOptions.forEach(pwr => {
-        select.add(new Option(pwr, pwr));
+    // --- 1. PUISSANCE DE RACCORDEMENT ---
+    const optionsRacc = isMono ? ["3 kVA", "12 kVA"] : ["3 kVA", "36 kVA"];
+    selectRacc.add(new Option("Sélectionnez le raccordement", ""));
+    optionsRacc.forEach(pwr => {
+        selectRacc.add(new Option(pwr, pwr));
     });
-}
-document.addEventListener("DOMContentLoaded", () => {
+
+    // --- 2. PUISSANCE SOUHAITÉE (SOUSCRITE) ---
+    if (selectSous) {
+        selectSous.add(new Option("Sélectionnez la puissance souhaitée", ""));
+        
+        let paliers;
+        if (isMono) {
+            paliers = ["3 kVA", "6 kVA", "9 kVA", "12 kVA"];
+        } else {
+            paliers = ["6 kVA", "9 kVA", "12 kVA", "15 kVA", "18 kVA", "24 kVA", "30 kVA", "36 kVA"];
+        }
+
+        paliers.forEach(pwr => {
+            selectSous.add(new Option(pwr, pwr));
+        });
+    }
+}document.addEventListener("DOMContentLoaded", () => {
     const radios = document.querySelectorAll('input[name="nbPhasesConso"]');
     radios.forEach(r => r.addEventListener("change", updatePuissance));
     

@@ -8,7 +8,8 @@ window.openEditorInNewTab = function(originalData, index, existingDrawings) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Éditeur Pro</title>
+    <title>Éditeur</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { margin: 0; background: #1a1a1a; font-family: sans-serif; overflow: hidden; color: white; }
         #toolbar { display: flex; gap: 8px; padding: 10px; background: #333; flex-wrap: wrap; justify-content: center; align-items: center; }
@@ -18,19 +19,39 @@ window.openEditorInNewTab = function(originalData, index, existingDrawings) {
         canvas { background: white; touch-action: none; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         .controls { display: flex; gap: 15px; padding: 10px; background: #222; justify-content: center; font-size: 14px; align-items: center; border-top: 1px solid #444;}
         input[type="range"] { width: 120px; }
+	.tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+}
+
+/* Taille de l'icône Lucide */
+.tool-btn i {
+    width: 20px;
+    height: 20px;
+}
+
+/* Quand le bouton est actif (bleu), l'icône passe en blanc */
+.tool-btn.active i {
+    color: white;
+}
     </style>
 </head>
 <body>
     <div id="toolbar">
-        <button class="tool-btn active" onclick="setTool('free', this)">✏️</button>
-        <button class="tool-btn" onclick="setTool('rect', this)">⬜</button>
-        <button class="tool-btn" onclick="setTool('text', this)">A</button>
-        <button class="tool-btn" onclick="setTool('line', this)">╱</button>
-        <button class="tool-btn" onclick="setTool('eraser', this)">✖</button>
-        <button class="tool-btn" onclick="undo()" style="background:#666;">↩</button>
-        <button class="tool-btn" onclick="save()" style="background:#28a745; margin-left:10px; width:100px;">VALIDER</button>
-    </div>
-    
+    <button class="tool-btn active" onclick="setTool('free', this)"><i data-lucide="pen"></i></button>
+    <button class="tool-btn" onclick="setTool('rect', this)"><i data-lucide="rectangle-horizontal"></i></button>
+    <button class="tool-btn" onclick="setTool('text', this)"><i data-lucide="a-large-small"></i></button>
+    <button class="tool-btn" onclick="setTool('line', this)"><i data-lucide="slash"></i></button>
+    <button class="tool-btn" onclick="setTool('eraser', this)"><i data-lucide="eraser"></i></button>
+    <button class="tool-btn" onclick="undo()" style="background:#666;"><i data-lucide="undo" style="color:white;"></i></button>
+    <button class="tool-btn" onclick="save()" style="background:#28a745; margin-left:10px; width:100px;">
+        <i data-lucide="check" style="color:white;"></i>
+    </button>
+</div>    
     <div class="controls">
         <label>Couleur: <input type="color" id="col" value="#ff0000"></label>
         <label>Taille: <input type="range" id="sizeRange" min="2" max="50" value="5"></label>
@@ -211,8 +232,10 @@ window.openEditorInNewTab = function(originalData, index, existingDrawings) {
     
     setTimeout(() => window.close(), 200);
 }
+lucide.createIcons();
     </script>
 </body>
 </html>
     `);
 };
+

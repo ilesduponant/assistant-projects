@@ -402,3 +402,10 @@ label:has(+ .radio-group[required])::after {
     margin-bottom: 8px;
     font-weight: bold;
 }
+
+/* Dans ton fichier CSS */
+.photo-item .lucide-trash-2 {
+    width: 14px !important;
+    height: 14px !important;
+    stroke-width: 3px;
+}

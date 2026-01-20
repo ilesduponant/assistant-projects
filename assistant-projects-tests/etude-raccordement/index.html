@@ -7,10 +7,9 @@
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 	<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+	<script src="https://unpkg.com/lucide@latest"></script>
 	<script src="editor.js"></script>
 	<script src="template.js" defer></script>
 	<script src="script.js" defer></script>
@@ -48,7 +47,11 @@
     <input type="text" id="gps-lat" placeholder="Latitude" readonly style="flex: 1;" />
     <input type="text" id="gps-lon" placeholder="Longitude" readonly style="flex: 1;" />
     <button type="button" onclick="getLocation()" title="Obtenir ma position" style="width: 44px;">📍</button>
-</div>    <label for="nomDepartBT">Nom du départ BT</label>
+</div>    
+<p style="font-size: 0.8rem; color: #555; margin-bottom: 15px;">
+    Relevé au pied de l'ouvrage pour la précision carto.
+</p>
+<label for="nomDepartBT">Nom du départ BT</label>
     <input type="text" id="nomDepartBT" />
     <label for="codeGDODepartBT">Code GDO départ BT</label>
     <input type="integer" id="codeGDODepartBT" />
@@ -129,20 +132,25 @@
         <label for="nonIRVE">Non</label>
     </div>
 </div>
-<label class="req-group">Nombre de phases en consomation</label>
+<label class="req-group">Nombre de phases en consommation</label>
 <div class="radio-group">
     <div class="radio-item">
-        <input type="radio" id="monophase" name="nbPhasesConso" value="Monophasé">
+        <input type="radio" id="monophase" name="nbPhasesConso" value="Monophasé" checked onchange="updatePuissance()">
         <label for="monophase">Monophasé</label>
     </div>
     <div class="radio-item">
-        <input type="radio" id="triphase" name="nbPhasesConso" value="Triphasé">
+        <input type="radio" id="triphase" name="nbPhasesConso" value="Triphasé" onchange="updatePuissance()">
         <label for="triphase">Triphasé</label>
     </div>
 </div>
+
+<label class="req-group">Puissance de raccordement max</label>
 <select id="puissanceRaccordement" required>
-  <!-- géré par la fonction updatePuissance -->
-</select>
+    </select>
+
+<label class="req-group">Puissance souscrite souhaitée</label>
+<select id="puissanceSouscrite" required>
+    </select>
 <h3>Détails des travaux</h3>
 <label>Local d'habitation de plus de 2 ans</label>
 <div class="radio-group">
