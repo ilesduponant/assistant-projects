@@ -1,6 +1,7 @@
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const dest_mail = process.env.DEST_MAIL;
 
 export default async function handler(req, res) {
     // 1. Configuration des Headers CORS
@@ -22,13 +23,13 @@ export default async function handler(req, res) {
 
         // 3. Envoi via Resend
         const data = await resend.emails.send({
-            from: 'Assistant Projets <onboarding@resend.dev>', //adresse d'envoi
-            to: ['eryuv1829@gmail.com'], //adresse réception
+            from: ' <onboarding@resend.dev>',
+            to: [dest_mail],
             subject: `Rapport : ${nom_client} - Dossier ${no_dossier}`,
             html: `<p>Nouveau rapport d'intervention pour <strong>${nom_client}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
             attachments: [
                 {
-                    filename: `photos_${no_dossier}.zip`,
+                    filename: `Raccordement_${no_dossier}.zip`,
                     content: zip_data, //base64
                 },
             ],
