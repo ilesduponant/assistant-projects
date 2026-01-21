@@ -28,26 +28,35 @@
 		<hr>
 	        <h3>Informations client</h3>
 	        <label for="nomCli">Nom</label>
-	        <input type="text" id="nomCli" oninput="this.value = this.value.toUpperCase()" maxlength="64" required />
+	        <input type="text" id="nomCli" maxlength="64" data-format="cap" required />
 	        <label for="prenomCli">Prénom</label>
-	        <input type="text" id="prenomCli" maxlenght="64" required />
+	        <input type="text" id="prenomCli" maxlength="64" required />
 	        <label for="adresseCli">Adresse</label>
-	        <input type="text" id="adresseCli" maxlenght="64" required />
+	        <input type="text" id="adresseCli" maxlength="64" required />
 	        <label for="cpCli">Code postal</label>
-	        <input type="integer" id="cpCli" maxlenght="5" required />
+	        <input type="integer" id="cpCli" data-format="num" maxlength="5" />
 	        <label for="villeCli">Ville</label>
-                <input type="text" id="villeCli" oninput="this.value = this.value.toUpperCase()" required />
+                <input type="text" id="villeCli" data-format="cap" class="group-required" />
+		<label for="ileCli">Île</label>
+		<select id="ileCli" class="group-required">
+		    <option value="" selected>Sélectionnez une île</option>
+		    <option value="Ouessant">Ouessant</option>
+		    <option value="Molène">Molène</option>
+		    <option value="Sein">Sein</option>
+		    <option value="Chausey">Chausey</option>
+		    <option value="Glénant">Glénant</option>
+		</select>
 	        <label for="complementAdrCli">Complément d'adresse</label>
 	        <textarea id="complementAdrCli" rows="3"></textarea>
 	        <label for="noDossier">Numéro de dossier OSR</label>
-	        <input type="integer" id="noDossier" maxlenght="64" oninput="this.value = this.value.toUpperCase()" required />
+	        <input type="integer" id="noDossier" maxlenght="64" data-format="cap" required />
                 
 		<hr />
                 <h3>Données sur le réseau</h3>
                 <label for="noDipole">Numéro dipole</label>
 	        <input type="integer" id="noDipole" />
 	        <label for="distAmont">Distance en amont du dipôle</label>
-	        <input type="integer" id="distAmont" />
+	        <input type="integer" id="distAmont" data-format="num" />
                 <label>Point GPS du dipôle</label>
                 <div style="display: flex; gap: 5px; align-items: center;">
                     <input type="text" id="gps-lat" placeholder="Latitude" readonly style="flex: 1;" />
@@ -69,8 +78,8 @@
                 <hr />
                 <h3>Raccordement</h3>
                 <label for="techBranchement">Technique de branchement</label>
-                <select id="techBranchement" onchange="this.style.width = (this.options[this.selectedIndex].text.length + 3) + 'ch'" required>
-                    <option value="" disabled selected >Selectionnez une technique de branchement</option>
+                <select id="techBranchement" required>
+                    <option value="" disabled selected >Sélectionnez une technique de branchement</option>
                     <option value="Branchement complet aérien">Branchement complet aérien</option>
                     <option value="Branchement complet aéro-souterrain">Branchement complet aéro-souterrain</option>
                     <option value="Branchement complet souterrain">Branchement complet souterrain</option>
@@ -92,12 +101,12 @@
                 </div>
                 <label for="longDomainePublic">Longueur en domaine public</label>
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <input type="text" id="longDomainePublic" required style="width: 90%; margin: 0;" required>
+                    <input type="text" id="longDomainePublic" required style="width: 90%; margin: 0;" data-format="num" required>
                     <span>m</span>
                 </div>
                 <label for="longDomainePrive">Longueur en domaine privé</label>
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <input type="text" id="longDomainePrive" required style="width: 90%; margin: 0;" required >
+                    <input type="text" id="longDomainePrive" required style="width: 90%; margin: 0;" data-format="num" required >
                     <span>m</span>
                 </div>
                 <label class="req-group">Tranchée et fourreau fournis par le demandeur</label>

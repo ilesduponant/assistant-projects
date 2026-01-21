@@ -81,7 +81,37 @@ document.addEventListener("DOMContentLoaded", () => {
             input.value = item.textContent.trim();
         }
     });
-});
+
+    const groupFields = document.querySelectorAll('.group-required');
+    
+    const updateRequiredStatus = () => {
+        const oneHasValue = Array.from(groupFields).some(f => f.value.trim() !== "");
+        groupFields.forEach(f => {
+            f.required = !oneHasValue;
+        });
+    };
+
+    groupFields.forEach(field => {
+        field.addEventListener('input', updateRequiredStatus);
+        field.addEventListener('change', updateRequiredStatus);
+    });
+    updateRequiredStatus();});
+
+    const applyFormatting = (input, type) => {
+        if (type === 'num') {
+            input.value = input.value.replace(/[^0-9]/g, '');
+        } else if (type === 'cap') {
+            input.value = input.value.toUpperCase();
+        } else if (type === 'alphanumcap') {
+            input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        }
+    };
+    document.querySelectorAll('[data-format]').forEach(field => {
+        field.addEventListener('input', (e) => {
+            const formatType = e.target.getAttribute('data-format');
+            applyFormatting(e.target, formatType);
+        });
+    });
 
 function renderPhotos() {
     photoPreviewContainer.innerHTML = "";
@@ -336,6 +366,7 @@ document.getElementById("generatePDF").onclick = async (e) => {
         adresseCli: document.getElementById("adresseCli").value || "",
         cpCli: document.getElementById("cpCli").value || "",
         villeCli: document.getElementById("villeCli").value || "",
+	ileCli: document.getElementById("ileCli").value || "",
         complementAdrCli: document.getElementById("complementAdrCli").value || "",
 
 	// Données réseau
@@ -442,6 +473,3 @@ window.copyAdresseClient = () => {
     document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
 };
 
-document.getElementById('noDipole').addEventListener('input', function (e) {
-    this.value = this.value.replace(/[^0-9]/g, '');
-});
