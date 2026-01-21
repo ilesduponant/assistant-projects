@@ -23,9 +23,9 @@ export default async function handler(req, res) {
 
         // 3. Envoi via Resend
         const data = await resend.emails.send({
-            from: ' <onboarding@resend.dev>',
+            from: 'Branchement <onboarding@resend.dev>',
             to: [dest_mail],
-            subject: `Rapport : ${nom_client} - Dossier ${no_dossier}`,
+            subject: `Branchement : ${nom_client} - Dossier ${no_dossier}`,
             html: `<p>Nouveau rapport d'intervention pour <strong>${nom_client}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
             attachments: [
                 {
