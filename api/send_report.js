@@ -25,11 +25,11 @@ export default async function handler(req, res) {
         const data = await resend.emails.send({
             from: 'Branchement <onboarding@resend.dev>',
             to: [dest_mail],
-            subject: `Branchement : ${nom_client} - Dossier ${no_dossier}`,
-            html: `<p>Nouveau rapport d'intervention pour <strong>${nom_client}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
+            subject: `BRANCHEMENT ${nomCli} - ${no_dossier}`,
+            html: `<p>Informations pour l'étude de branchement <strong>${n-pCli}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
             attachments: [
                 {
-                    filename: `Raccordement_${no_dossier}.zip`,
+                    filename: `Raccordement_${nomCli}_${ile}.zip`,
                     content: zip_data, //base64
                 },
             ],

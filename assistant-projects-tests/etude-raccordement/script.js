@@ -424,8 +424,11 @@ document.getElementById("generatePDF").onclick = async (e) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                nom_client: `${data.nomCli} ${data.prenomCli}`,
+		nomCli: data.nomCli,
+		prenomCli: data.prenomCli,
+		n-pCli: `${data.nomCli} ${data.prenomCli}`,
                 no_dossier: data.noDossier,
+		ile: data.ileCli,
                 zip_data: base64Zip
             })
         });
