@@ -452,7 +452,12 @@ document.getElementById("generatePDF").onclick = async (e) => {
 
 async function genererPDF(data) {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF();
+    const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+        compress: true 
+    });
     
     // Couleurs EDF
     const bleuEDF = [0, 91, 187];
@@ -573,7 +578,7 @@ async function genererPDF(data) {
     pdf.addImage(data.signature, 'PNG', 20, y + 15, 60, 30);
 
     // SAUVEGARDE ET RETOUR DU BLOB POUR LE ZIP
-    // pdf.save(`Rapport_${data.noDossier}.pdf`); // Optionnel : télécharge aussi le PDF seul
+    pdf.save(`Rapport_${data.noDossier}.pdf`);
     return pdf.output('blob'); 
 }
 window.syncIdentite = () => {
