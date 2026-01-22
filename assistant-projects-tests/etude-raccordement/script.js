@@ -404,7 +404,7 @@ document.getElementById("generatePDF").onclick = async (e) => {
         dateReelle: document.getElementById("dateReelle").value || "",
         listeTravaux: Array.from(document.querySelectorAll('input[name="listeTravaux"]:checked'))
             .map(cb => "- " + cb.parentElement.textContent.trim())
-            .join("\n"),        commTravaux: document.getElementById("commTravaux").value || "",
+            .join("<br />"),        commTravaux: document.getElementById("commTravaux").value || "",
         signature: document.getElementById("signature-representant-canvas").toDataURL(),
         photos: photoList
     };
