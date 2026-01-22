@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { nom_client, no_dossier, zip_data } = req.body;
+        const { nomCli, prenomCli, ile, no_dossier, zip_data } = req.body;
 
         // 3. Envoi via Resend
         const data = await resend.emails.send({

@@ -456,131 +456,128 @@ async function genererPDF(data) {
         orientation: 'p',
         unit: 'mm',
         format: 'a4',
-        compress: true 
+        compress: true
     });
-    
-    // Couleurs EDF
+
     const bleuEDF = [0, 91, 187];
     const grisFonce = [80, 80, 80];
 
     // --- EN-TÊTE ---
     try {
-        // Ajout du logo (si le chemin est correct et accessible)
-        pdf.addImage('../EDF.png', 'PNG', 150, 10, 40, 20);
+        pdf.addImage('EDF.png', 'PNG', 160, 10, 35, 18);
     } catch (e) {
-        console.warn("Logo non trouvé au chemin spécifié");
+        console.warn("Logo non trouvé");
     }
 
-    pdf.setFontSize(22);
+    pdf.setFontSize(18);
     pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
-    pdf.text("COMPTE-RENDU TECHNIQUE", 20, 25);
-    
-    pdf.setFontSize(10);
+    pdf.text("ARCHIVE TECHNIQUE DE RACCORDEMENT", 20, 25);
+
+    pdf.setFontSize(9);
     pdf.setTextColor(grisFonce[0], grisFonce[1], grisFonce[2]);
-    pdf.text(`Généré le : ${new Date().toLocaleDateString('fr-FR')}`, 20, 32);
+    pdf.text(`Document de secours - Dossier OSR : ${data.noDossier}`, 20, 32);
+    pdf.text(`Date de génération : ${new Date().toLocaleString('fr-FR')}`, 20, 37);
 
-    // --- SECTION 1 : INFOS DOSSIER (Encadré Bleu) ---
-    pdf.setDrawColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
-    pdf.setLineWidth(0.5);
-    pdf.line(20, 35, 190, 35); // Ligne de séparation
+    let y = 50;
 
-    pdf.setFontSize(14);
-    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
-    pdf.text("INFORMATIONS GÉNÉRALES", 20, 45);
-
-    pdf.setFontSize(11);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(`Dossier OSR : ${data.noDossier}`, 25, 55);
-    pdf.text(`Client : ${data.nomCli} ${data.prenomCli}`, 25, 62);
-    pdf.text(`Localisation : ${data.adresseCli}, ${data.cpCli} ${data.villeCli} ${data.ileCli}`, 25, 69);
-    if(data.complementAdrCli) pdf.text(`Complément : ${data.complementAdrCli}`, 25, 76);
-
-    // --- SECTION 2 : TECHNIQUE & RÉSEAU ---
-    let y = 90;
-    pdf.setFontSize(14);
-    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
-    pdf.text("CARACTÉRISTIQUES TECHNIQUES", 20, y);
-    
-    pdf.setFontSize(11);
-    pdf.setTextColor(0, 0, 0);
-    y += 10;
-    const col2 = 100;
-
-    // Colonne 1
-    pdf.text(`Technique : ${data.techBranchement}`, 25, y);
-    pdf.text(`Puissance Max : ${data.puissanceRaccordement} kVA`, 25, y + 7);
-    pdf.text(`Domaine Public : ${data.longDomainePublic} m`, 25, y + 14);
-    pdf.text(`IRVE : ${data.IRVE}`, 25, y + 21);
-
-    // Colonne 2
-    pdf.text(`Poste : ${data.nomPosteHTABT}`, col2, y);
-    pdf.text(`GDO Poste : ${data.codeGDOPosteHTABT}`, col2, y + 7);
-    pdf.text(`Dipôle n° : ${data.noDipole}`, col2, y + 14);
-    pdf.text(`GPS : ${data.gpsLat}, ${data.gpsLon}`, col2, y + 21);
-
-    // --- SECTION 3 : TRAVAUX ---
-    y += 35;
-    pdf.setFontSize(14);
-    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
-    pdf.text("TRAVAUX RÉALISÉS", 20, y);
-    
-    pdf.setFontSize(10);
-    pdf.setTextColor(0, 0, 0);
-    y += 8;
-    // Gestion du texte long pour les travaux
-    const travauxSplit = pdf.splitTextToSize(data.listeTravaux || "Aucun", 160);
-    pdf.text(travauxSplit, 25, y);
-    
-    y += (travauxSplit.length * 5) + 5;
-    if(data.commTravaux) {
-        pdf.setFont("helvetica", "italic");
-        pdf.text("Commentaires : " + data.commTravaux, 25, y);
+    // Fonction utilitaire pour ajouter une section
+    const addSection = (title) => {
+        y += 5;
+        pdf.setFontSize(12);
+        pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+        pdf.setFont("helvetica", "bold");
+        pdf.text(title, 20, y);
+        y += 2;
+        pdf.setDrawColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+        pdf.setLineWidth(0.3);
+        pdf.line(20, y, 190, y);
+        y += 8;
         pdf.setFont("helvetica", "normal");
-    }
-
-    // --- SECTION 4 : PHOTOS ---
-    pdf.addPage();
-    pdf.setFontSize(14);
-    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
-    pdf.text("PIÈCES PHOTOGRAPHIQUES", 20, 20);
-
-    y = 35;
-    data.photos.forEach((p, index) => {
-        if (y > 230) {
-            pdf.addPage();
-            y = 20;
-        }
-        
-        // Cadre photo
-        pdf.setDrawColor(200);
-        pdf.rect(19, y - 1, 52, 42); 
-        pdf.addImage(p.current, 'JPEG', 20, y, 50, 40);
-        
         pdf.setFontSize(10);
         pdf.setTextColor(0, 0, 0);
-        pdf.text(`Photo ${index + 1} : ${p.label || "Sans titre"}`, 75, y + 15);
-        if(p.gpsLat) pdf.text(`Coordonnées : ${p.gpsLat}, ${p.gpsLon}`, 75, y + 22);
-        
-        y += 50;
-    });
+    };
 
-    // --- SECTION 5 : SIGNATURE ---
-    if (y > 200) pdf.addPage(); // Évite que la signature soit coupée en bas
-    y = pdf.internal.pageSize.height - 70;
-    
-    pdf.setDrawColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
-    pdf.line(20, y, 190, y);
-    
-    pdf.setFontSize(12);
+    // Fonction utilitaire pour ajouter une ligne de donnée
+    const addData = (label, value) => {
+        if (y > 270) { pdf.addPage(); y = 20; }
+        pdf.setFont("helvetica", "bold");
+        pdf.text(`${label} :`, 25, y);
+        pdf.setFont("helvetica", "normal");
+        const val = value ? String(value) : "Néant";
+        const splitVal = pdf.splitTextToSize(val, 120);
+        pdf.text(splitVal, 70, y);
+        y += (splitVal.length * 5) + 2;
+    };
+
+    // --- SECTION : CLIENT ---
+    addSection("COORDONNÉES CLIENT");
+    addData("Nom", data.nomCli);
+    addData("Prénom", data.prenomCli);
+    addData("Adresse", data.adresseCli);
+    addData("CP / Ville", `${data.cpCli} ${data.villeCli}`);
+    addData("Île", data.ileCli);
+    addData("Complément", data.complementAdrCli);
+    addData("N° Dossier OSR", data.noDossier);
+
+    // --- SECTION : RÉSEAU ---
+    addSection("DONNÉES RÉSEAU");
+    addData("Dipôle n°", data.noDipole);
+    addData("Distance amont", `${data.distAmont} m`);
+    addData("Latitude GPS", data.gpsLat);
+    addData("Longitude GPS", data.gpsLon);
+    addData("Départ BT", data.nomDepartBT);
+    addData("GDO Départ", data.codeGDODepartBT);
+    addData("Poste HTA/BT", data.nomPosteHTABT);
+    addData("GDO Poste", data.codeGDOPosteHTABT);
+
+    // --- SECTION : BRANCHEMENT ---
+    addSection("CARACTÉRISTIQUES BRANCHEMENT");
+    addData("Technique", data.techBranchement);
+    addData("Type", data.typeBranchement);
+    addData("Domaine Public", `${data.longDomainePublic} m`);
+    addData("Domaine Privé", `${data.longDomainePrive} m`);
+    addData("Fourreaux client", data.trancheeEtFourreau);
+    addData("Intervention", data.domaineIntervention);
+    addData("IRVE", data.IRVE);
+    addData("Schéma IRVE", data.schemaIRVE);
+    addData("Phasage", data.nbPhasesConso);
+    addData("P. Raccordement", `${data.puissanceRaccordement} kVA`);
+    addData("P. Souscrite", `${data.puissanceSouscrite} kVA`);
+
+    // --- SECTION : TRAVAUX ---
+    addSection("SUIVI DES TRAVAUX");
+    addData("Local > 2 ans", data.localHabitation);
+    addData("Charge demandeur", data.travauxChargeDemandeur);
+    addData("Fin prévue le", data.datePrevue);
+    addData("Fin réelle le", data.dateReelle);
+    addData("Liste travaux", data.listeTravaux);
+    addData("Commentaires", data.commTravaux);
+
+    // --- SECTION : SIGNATURE ---
+    y += 10;
+    if (y > 230) { pdf.addPage(); y = 30; }
+    pdf.setFont("helvetica", "bold");
     pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
-    pdf.text("SIGNATURE DE L'AGENT", 20, y + 10);
-    
-    pdf.addImage(data.signature, 'PNG', 20, y + 15, 60, 30);
+    pdf.text("SIGNATURE DE L'AGENT", 25, y);
+    y += 5;
+    try {
+        pdf.addImage(data.signature, 'PNG', 25, y, 50, 25);
+    } catch (e) {
+        pdf.text("[Erreur chargement signature]", 25, y + 10);
+    }
 
-    // SAUVEGARDE ET RETOUR DU BLOB POUR LE ZIP
-    pdf.save(`Rapport_${data.noDossier}.pdf`);
-    return pdf.output('blob'); 
+    // PIED DE PAGE SUR TOUTES LES PAGES
+    const pageCount = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150);
+        pdf.text(`Document d'archive technique - Page ${i} / ${pageCount}`, 105, 290, { align: 'center' });
+    }
+
+    return pdf.output('blob');
 }
+
 window.syncIdentite = () => {
     document.getElementById('nomTravaux').value = document.getElementById('nomCli').value;
     document.getElementById('prenomTravaux').value = document.getElementById('prenomCli').value;
