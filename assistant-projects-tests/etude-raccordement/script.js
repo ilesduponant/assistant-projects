@@ -464,7 +464,7 @@ async function genererPDF(data) {
 
     // --- EN-TÊTE ---
     try {
-        pdf.addImage('EDF.png', 'PNG', 160, 10, 35, 18);
+        pdf.addImage('../EDF.png', 'PNG', 160, 10, 35, 18);
     } catch (e) {
         console.warn("Logo non trouvé");
     }
