@@ -26,7 +26,7 @@ export default async function handler(req, res) {
             from: 'Branchement <onboarding@resend.dev>',
             to: [dest_mail],
             subject: `BRANCHEMENT ${nomCli} - ${no_dossier}`,
-            html: `<p>Informations pour l'étude de branchement <strong>${n-pCli}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
+            html: `<p>Informations pour l'étude de branchement <strong>${npCli}</strong>.</p><p>Dossier n°${no_dossier}</p>`,
             attachments: [
                 {
                     filename: `Raccordement_${nomCli}_${ile}.zip`,

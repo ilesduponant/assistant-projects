@@ -404,9 +404,11 @@ document.getElementById("generatePDF").onclick = async (e) => {
     };
 
     try {
-        await genererPDF(data);
+        const pdfBlob = await genererPDF(data);
 
         const zip = new JSZip();
+
+	zip.file(`Rapport_${data.noDossier}.pdf`, pdfBlob);
         const htmlTemplate = generateHTMLReport(data);
         zip.file("CONSULTATION.html", htmlTemplate);
 
@@ -426,7 +428,7 @@ document.getElementById("generatePDF").onclick = async (e) => {
             body: JSON.stringify({
 		nomCli: data.nomCli,
 		prenomCli: data.prenomCli,
-		n-pCli: `${data.nomCli} ${data.prenomCli}`,
+		npCli: `${data.nomCli} ${data.prenomCli}`,
                 no_dossier: data.noDossier,
 		ile: data.ileCli,
                 zip_data: base64Zip
@@ -451,20 +453,129 @@ document.getElementById("generatePDF").onclick = async (e) => {
 async function genererPDF(data) {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF();
-    pdf.text(`Rapport d'intervention : ${data.nomCli}`, 20, 20);
-    pdf.text(`Dossier : ${data.noDossier}`, 20, 30);
-    let y = 50;
-    data.photos.forEach(p => {
-        if(y > 250) { pdf.addPage(); y = 20; }
-        pdf.addImage(p.current, 'PNG', 20, y, 50, 40);
-        pdf.text(p.label + " (" + (p.gps || "Pas de GPS") + ")", 75, y + 20);
+    
+    // Couleurs EDF
+    const bleuEDF = [0, 91, 187];
+    const grisFonce = [80, 80, 80];
+
+    // --- EN-TÊTE ---
+    try {
+        // Ajout du logo (si le chemin est correct et accessible)
+        pdf.addImage('../EDF.png', 'PNG', 150, 10, 40, 20);
+    } catch (e) {
+        console.warn("Logo non trouvé au chemin spécifié");
+    }
+
+    pdf.setFontSize(22);
+    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+    pdf.text("COMPTE-RENDU TECHNIQUE", 20, 25);
+    
+    pdf.setFontSize(10);
+    pdf.setTextColor(grisFonce[0], grisFonce[1], grisFonce[2]);
+    pdf.text(`Généré le : ${new Date().toLocaleDateString('fr-FR')}`, 20, 32);
+
+    // --- SECTION 1 : INFOS DOSSIER (Encadré Bleu) ---
+    pdf.setDrawColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+    pdf.setLineWidth(0.5);
+    pdf.line(20, 35, 190, 35); // Ligne de séparation
+
+    pdf.setFontSize(14);
+    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+    pdf.text("INFORMATIONS GÉNÉRALES", 20, 45);
+
+    pdf.setFontSize(11);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`Dossier OSR : ${data.noDossier}`, 25, 55);
+    pdf.text(`Client : ${data.nomCli} ${data.prenomCli}`, 25, 62);
+    pdf.text(`Localisation : ${data.adresseCli}, ${data.cpCli} ${data.villeCli} ${data.ileCli}`, 25, 69);
+    if(data.complementAdrCli) pdf.text(`Complément : ${data.complementAdrCli}`, 25, 76);
+
+    // --- SECTION 2 : TECHNIQUE & RÉSEAU ---
+    let y = 90;
+    pdf.setFontSize(14);
+    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+    pdf.text("CARACTÉRISTIQUES TECHNIQUES", 20, y);
+    
+    pdf.setFontSize(11);
+    pdf.setTextColor(0, 0, 0);
+    y += 10;
+    const col2 = 100;
+
+    // Colonne 1
+    pdf.text(`Technique : ${data.techBranchement}`, 25, y);
+    pdf.text(`Puissance Max : ${data.puissanceRaccordement} kVA`, 25, y + 7);
+    pdf.text(`Domaine Public : ${data.longDomainePublic} m`, 25, y + 14);
+    pdf.text(`IRVE : ${data.IRVE}`, 25, y + 21);
+
+    // Colonne 2
+    pdf.text(`Poste : ${data.nomPosteHTABT}`, col2, y);
+    pdf.text(`GDO Poste : ${data.codeGDOPosteHTABT}`, col2, y + 7);
+    pdf.text(`Dipôle n° : ${data.noDipole}`, col2, y + 14);
+    pdf.text(`GPS : ${data.gpsLat}, ${data.gpsLon}`, col2, y + 21);
+
+    // --- SECTION 3 : TRAVAUX ---
+    y += 35;
+    pdf.setFontSize(14);
+    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+    pdf.text("TRAVAUX RÉALISÉS", 20, y);
+    
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    y += 8;
+    // Gestion du texte long pour les travaux
+    const travauxSplit = pdf.splitTextToSize(data.listeTravaux || "Aucun", 160);
+    pdf.text(travauxSplit, 25, y);
+    
+    y += (travauxSplit.length * 5) + 5;
+    if(data.commTravaux) {
+        pdf.setFont("helvetica", "italic");
+        pdf.text("Commentaires : " + data.commTravaux, 25, y);
+        pdf.setFont("helvetica", "normal");
+    }
+
+    // --- SECTION 4 : PHOTOS ---
+    pdf.addPage();
+    pdf.setFontSize(14);
+    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+    pdf.text("PIÈCES PHOTOGRAPHIQUES", 20, 20);
+
+    y = 35;
+    data.photos.forEach((p, index) => {
+        if (y > 230) {
+            pdf.addPage();
+            y = 20;
+        }
+        
+        // Cadre photo
+        pdf.setDrawColor(200);
+        pdf.rect(19, y - 1, 52, 42); 
+        pdf.addImage(p.current, 'JPEG', 20, y, 50, 40);
+        
+        pdf.setFontSize(10);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`Photo ${index + 1} : ${p.label || "Sans titre"}`, 75, y + 15);
+        if(p.gpsLat) pdf.text(`Coordonnées : ${p.gpsLat}, ${p.gpsLon}`, 75, y + 22);
+        
         y += 50;
     });
-    pdf.addPage();
-    pdf.addImage(data.signature, 'PNG', 20, 30, 60, 30);
-    pdf.save(`Rapport_${data.nomCli}.pdf`);
-}
 
+    // --- SECTION 5 : SIGNATURE ---
+    if (y > 200) pdf.addPage(); // Évite que la signature soit coupée en bas
+    y = pdf.internal.pageSize.height - 70;
+    
+    pdf.setDrawColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+    pdf.line(20, y, 190, y);
+    
+    pdf.setFontSize(12);
+    pdf.setTextColor(bleuEDF[0], bleuEDF[1], bleuEDF[2]);
+    pdf.text("SIGNATURE DE L'AGENT", 20, y + 10);
+    
+    pdf.addImage(data.signature, 'PNG', 20, y + 15, 60, 30);
+
+    // SAUVEGARDE ET RETOUR DU BLOB POUR LE ZIP
+    // pdf.save(`Rapport_${data.noDossier}.pdf`); // Optionnel : télécharge aussi le PDF seul
+    return pdf.output('blob'); 
+}
 window.syncIdentite = () => {
     document.getElementById('nomTravaux').value = document.getElementById('nomCli').value;
     document.getElementById('prenomTravaux').value = document.getElementById('prenomCli').value;
