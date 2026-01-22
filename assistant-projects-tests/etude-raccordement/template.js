@@ -131,7 +131,7 @@ const generateHTMLReport = (data) => {
 		   <div style="margin-top:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
 			<p><strong>Dates :</strong> Prévue le ${formatDate(data.datePrevue)} / Réelle le ${formatDate(data.dateReelle)}</p>
 			<p><strong>Actions :</strong> ${data.listeTravaux || 'Aucune'}</p>
-			<p><strong>Commentaire travaux :</strong> ${data.commTravaux}</p>
+			<p><strong>Commentaire travaux :</strong><span class="copy-zone" onclick="cp(this)"> ${data.commTravaux}</span></p>
 		    </div>
 		` : ''}
 	    </section>
