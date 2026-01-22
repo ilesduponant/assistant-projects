@@ -48,7 +48,7 @@ const generateHTMLReport = (data) => {
 		    <span class="label">Client :</span><span class="val">
 		    <span class="copy-zone" onclick="cp(this)">${data.nomCli}</span> <span class="copy-zone" onclick="cp(this)">${data.prenomCli}</span></span></div>
 		<div class="row"><span class="label">Adresse :</span><span class="val">
-		    <span class="copy-zone" onclick="cp(this)">${data.adresseCli}</span>, <span class="copy-zone" onclick="cp(this)">${data.cpCli}</span> <span class="copy-zone" onclick="cp(this)">${data.villeCli}</span></span>
+		    <span class="copy-zone" onclick="cp(this)">${data.adresseCli}</span>, <span class="copy-zone" onclick="cp(this)">${data.cpCli}</span> <span class="copy-zone" onclick="cp(this)">${data.villeCli}</span><span class="copy-zone" onclick="cp(this)">${data.ileCli}</span></span>
 		</div>
 		${data.complementAdrCli ? `
 		    <div class="row">
@@ -81,16 +81,16 @@ const generateHTMLReport = (data) => {
 		<div class="row">
 		    <span class="label">Poste HTA/BT :</span>
 		    <span class="val">
-			${data.nomPosteHTABT || 'N/A'} 
-			(<span class="copy-zone" onclick="cp(this)">${data.codeGDOPosteHTABT || 'Code GDO'}</span>)
+			<span class="copy-zone" onclick="cp(this)">${data.nomPosteHTABT || 'N/A'}</span> : 
+			<span class="copy-zone" onclick="cp(this)">${data.codeGDOPosteHTABT || 'Code GDO'}</span>
 		    </span>
 		</div>
 
 		<div class="row">
 		    <span class="label">Départ BT :</span>
 		    <span class="val">
-			${data.nomDepartBT || 'N/A'} 
-			(<span class="copy-zone" onclick="cp(this)">${data.codeGDODepartBT || 'Code GDO'}</span>)
+			<span class="copy-zone" onclick="cp(this)">${data.nomDepartBT || 'N/A'}</span> : 
+			<span class="copy-zone" onclick="cp(this)">${data.codeGDODepartBT || 'Code GDO'}</span>
 		    </span>
 		</div>
 	    </section>
@@ -131,6 +131,7 @@ const generateHTMLReport = (data) => {
 		   <div style="margin-top:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
 			<p><strong>Dates :</strong> Prévue le ${formatDate(data.datePrevue)} / Réelle le ${formatDate(data.dateReelle)}</p>
 			<p><strong>Actions :</strong> ${data.listeTravaux || 'Aucune'}</p>
+			<p><strong>Commentaire travaux :</strong> ${data.commTravaux}</p>
 		    </div>
 		` : ''}
 	    </section>

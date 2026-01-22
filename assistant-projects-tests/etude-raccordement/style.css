@@ -409,3 +409,12 @@ label:has(+ .radio-group[required])::after {
     height: 14px !important;
     stroke-width: 3px;
 }
+
+/* Pour les labels juste avant un input required */
+label:has(+ input[required])::after,
+label:has(+ div > input[required])::after,
+.req-group::after {
+    content: " *";
+    color: #ff0000;
+    font-weight: bold;
+}

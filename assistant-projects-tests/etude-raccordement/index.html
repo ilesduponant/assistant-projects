@@ -56,7 +56,7 @@
                 <label for="noDipole">Numéro dipole</label>
 	        <input type="integer" id="noDipole" data-format="num"/>
 	        <label for="distAmont">Distance en amont du dipôle</label>
-	        <input type="integer" id="distAmont" data-format="num" />
+	        <input type="integer" id="distAmont" data-format="decimal" />
                 <label>Point GPS du dipôle</label>
                 <div style="display: flex; gap: 5px; align-items: center;">
                     <input type="text" id="gps-lat" placeholder="Latitude" readonly style="flex: 1;" />
@@ -101,12 +101,12 @@
                 </div>
                 <label for="longDomainePublic">Longueur en domaine public</label>
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <input type="text" id="longDomainePublic" required style="width: 90%; margin: 0;" data-format="num" required>
+                    <input type="text" id="longDomainePublic" required style="width: 90%; margin: 0;" data-format="decimal" required>
                     <span>m</span>
                 </div>
                 <label for="longDomainePrive">Longueur en domaine privé</label>
                 <div style="display: flex; align-items: center; gap: 5px;">
-                    <input type="text" id="longDomainePrive" required style="width: 90%; margin: 0;" data-format="num" required >
+                    <input type="text" id="longDomainePrive" required style="width: 90%; margin: 0;" data-format="decimal" required >
                     <span>m</span>
                 </div>
                 <label class="req-group">Tranchée et fourreau fournis par le demandeur</label>
@@ -134,21 +134,24 @@
                     <option value="Liaison réseau" >Liaison réseau</option>
                 </select>
                 <label for="IRVE">IRVE</label>
-                <select id='IRVE'>
-                    <option value="Sans IRVE">Sans IRVE</option>
+		<select id='IRVE' onchange="toggleIRVE()">
+		    <option value="Sans IRVE">Sans IRVE</option>
                     <option value="IRVE">IRVE</option>
                 </select>
-                <label class="req-group">Schéma directeur IRVE validé</label>
-                <div class="radio-group">
-                    <div class="radio-item">
-                        <input type="radio" id="ouiIRVE" name="schemaIRVE" value="Oui">
-                        <label for="ouiIRVE">Oui</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="nonIRVE" name="schemaIRVE" value="Non">
-                        <label for="nonIRVE">Non</label>
-                    </div>
-                </div>
+
+		<div id="section-schema-irve" style="display: none; margin-top: 10px;">
+    		    <label class="req-group">Schéma directeur IRVE validé</label>
+    		    <div class="radio-group">
+        		<div class="radio-item">
+            		    <input type="radio" id="ouiIRVE" name="schemaIRVE" value="Oui">
+            		    <label for="ouiIRVE">Oui</label>
+                        </div>
+                    	<div class="radio-item">
+                            <input type="radio" id="nonIRVE" name="schemaIRVE" value="Non">
+            		    <label for="nonIRVE">Non</label>
+        		</div>
+    		    </div>
+		</div>
                 <label class="req-group">Nombre de phases en consommation</label>
                 <div class="radio-group">
                     <div class="radio-item">

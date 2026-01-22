@@ -104,6 +104,13 @@ document.addEventListener("DOMContentLoaded", () => {
             input.value = input.value.toUpperCase();
         } else if (type === 'alphanumcap') {
             input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        } else if (type === 'decimal') {
+            input.value = input.value.replace(/,/g, '.');
+    	    input.value = input.value.replace(/[^0-9.]/g, '');
+    	    const parts = input.value.split('.');
+            if (parts.length > 2) {
+        	input.value = parts[0] + '.' + parts.slice(1).join('');
+            }
         }
     };
     document.querySelectorAll('[data-format]').forEach(field => {
@@ -408,7 +415,7 @@ document.getElementById("generatePDF").onclick = async (e) => {
 
         const zip = new JSZip();
 
-	zip.file(`Rapport_${data.noDossier}.pdf`, pdfBlob);
+	zip.file(`Rapport_${data.nomCli}_${data.ileCli}.pdf`, pdfBlob);
         const htmlTemplate = generateHTMLReport(data);
         zip.file("CONSULTATION.html", htmlTemplate);
 
@@ -572,9 +579,9 @@ async function genererPDF(data) {
         pdf.setPage(i);
         pdf.setFontSize(8);
         pdf.setTextColor(150);
-        pdf.text(`Document d'archive technique - Page ${i} / ${pageCount}`, 105, 290, { align: 'center' });
+        pdf.text(`BRANCHEMENT ${data.nomCli} - Page ${i} / ${pageCount}`, 105, 290, { align: 'center' });
     }
-
+    pdf.save(`Rapport_${data.noDossier}_${data.ileCli}.pdf`);
     return pdf.output('blob');
 }
 
@@ -589,3 +596,22 @@ window.copyAdresseClient = () => {
     document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
 };
 
+function toggleIRVE() {
+    const selectIRVE = document.getElementById('IRVE');
+    const sectionSchema = document.getElementById('section-schema-irve');
+    const radiosIRVE = document.querySelectorAll('input[name="schemaIRVE"]');
+
+    if (selectIRVE.value === "IRVE") {
+        sectionSchema.style.display = 'block';
+        // On peut rendre le choix obligatoire si affiché
+        radiosIRVE.forEach(r => r.required = true);
+    } else {
+        sectionSchema.style.display = 'none';
+        // On retire l'obligation et on décoche
+        radiosIRVE.forEach(r => {
+            r.required = false;
+            r.checked = false;
+        });
+    }
+}
+document.addEventListener('DOMContentLoaded', toggleIRVE);
