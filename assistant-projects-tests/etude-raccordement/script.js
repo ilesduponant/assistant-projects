@@ -403,10 +403,8 @@ document.getElementById("generatePDF").onclick = async (e) => {
         datePrevue: document.getElementById("datePrevue").value || "",
         dateReelle: document.getElementById("dateReelle").value || "",
         listeTravaux: Array.from(document.querySelectorAll('input[name="listeTravaux"]:checked'))
-	    .join("- "),
-            .map(cb => cb.value)
-            .join("\n"),
-        commTravaux: document.getElementById("commTravaux").value || "",
+            .map(cb => "- " + cb.parentElement.textContent.trim())
+            .join("\n"),        commTravaux: document.getElementById("commTravaux").value || "",
         signature: document.getElementById("signature-representant-canvas").toDataURL(),
         photos: photoList
     };
