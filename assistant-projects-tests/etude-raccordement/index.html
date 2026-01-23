@@ -37,6 +37,7 @@
 	        <input type="integer" id="cpCli" data-format="num" maxlength="5" />
 	        <label for="villeCli">Ville</label>
                 <input type="text" id="villeCli" data-format="cap" class="group-required" />
+		<div style="font-size: 0.8rem; color: #666; margin: -5px 0 10px 0; font-style: italic;">— et/ou —</div>
 		<label for="ileCli">Île</label>
 		<select id="ileCli" class="group-required">
 		    <option value="" selected>Sélectionnez une île</option>
@@ -53,19 +54,16 @@
                 
 		<hr />
                 <h3>Données sur le réseau</h3>
-                <label for="noDipole">Numéro dipole</label>
+                <label for="noDipole">Numéro dipôle</label>
 	        <input type="integer" id="noDipole" data-format="num"/>
 	        <label for="distAmont">Distance en amont du dipôle</label>
 	        <input type="integer" id="distAmont" data-format="decimal" />
-                <label>Point GPS du dipôle</label>
+		<label>Point GPS du dipôle <br /><small>Relevé au pied de l'ouvrage pour la précision carto.</small></label>
                 <div style="display: flex; gap: 5px; align-items: center;">
+		    <button type="button" onclick="getLocation()" title="Obtenir ma position" style="width: 44px;"><i data-lucide="map-pin"></i></button>
                     <input type="text" id="gps-lat" placeholder="Latitude" readonly style="flex: 1;" />
                     <input type="text" id="gps-lon" placeholder="Longitude" readonly style="flex: 1;" />
-                    <button type="button" onclick="getLocation()" title="Obtenir ma position" style="width: 44px;"><i data-lucide="map-pin"></i></button>
                 </div>    
-                <p style="font-size: 0.8rem; color: #555; margin-bottom: 15px;">
-                    Relevé au pied de l'ouvrage pour la précision carto.
-                </p>
                 <label for="nomDepartBT">Nom du départ BT</label>
                 <input type="text" id="nomDepartBT" />
                 <label for="codeGDODepartBT">Code GDO départ BT</label>
@@ -92,19 +90,19 @@
                     <!-- si un input radio es obligatoire, tous ceux du même nom le deviennent -->
                     <div class="radio-item">
                         <input type="radio" id="T1" name="typeBranchement" value="Type 1" required>
-                        <label for="T1">Type 1</label>
+			<label for="T1">Type 1 <small> Compteur à l'intérieur</small></label>
                     </div>
                     <div class="radio-item">
                         <input type="radio" id="T2" name="typeBranchement" value="Type 2">
-                        <label for="T2">Type 2</label>
+			<label for="T2">Type 2 <small> Compteur à l'extérieur</small></label>
                     </div>
                 </div>
-                <label for="longDomainePublic">Longueur en domaine public</label>
+		<label for="longDomainePublic">Longueur en domaine public <small>Partie A</small></label>
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <input type="text" id="longDomainePublic" required style="width: 90%; margin: 0;" data-format="decimal" required>
                     <span>m</span>
                 </div>
-                <label for="longDomainePrive">Longueur en domaine privé</label>
+		<label for="longDomainePrive">Longueur en domaine privé <small>Partie B</small></label>
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <input type="text" id="longDomainePrive" required style="width: 90%; margin: 0;" data-format="decimal" required >
                     <span>m</span>
@@ -129,11 +127,11 @@
                 <label for="domaineIntervention">Domaine d'intervention</label>
                 <select id="domaineIntervention" onchange="this.style.width = (this.options[this.selectedIndex].text.length + 3) + 'ch'" required >
                     <option value="" disabled selected >Sélectionnez un domaine d'intervention</option>
-                    <option value="Dérivation individuelle + Liaison réseau" >Dérivation individuelle + Liaison réseau</option>
+		    <option value="Dérivation individuelle + Liaison réseau" >Liaison Réseau <small>Partie A</small> + Dérivation individuelle <small>Partie B</smalL></option>
                     <option value="Dérivation individuelle" >Dérivation individuelle</option>
                     <option value="Liaison réseau" >Liaison réseau</option>
                 </select>
-                <label for="IRVE">IRVE</label>
+			<label for="IRVE">IRVE <small>Borne de recharge</small></label>
 		<select id='IRVE' onchange="toggleIRVE()">
 		    <option value="Sans IRVE">Sans IRVE</option>
                     <option value="IRVE">IRVE</option>

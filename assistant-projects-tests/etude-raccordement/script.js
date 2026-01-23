@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ctx = canvas.getContext("2d");
     let drawing = false;
 
+    // Réglages du dessin pour le canvas de signature
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -30,7 +31,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
-
+    
+    // Position du curseur
     const getPos = (e) => {
         const rect = canvas.getBoundingClientRect();
         return { 
@@ -70,11 +72,13 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         hasSignature = false;
     };
-
+    
+    // Appel du changement de puissance
     const radios = document.querySelectorAll('input[name="nbPhasesConso"]');
     radios.forEach(r => r.addEventListener("change", updatePuissance));
     updatePuissance();
 
+    // La value vaut le texte affiché (checkboxes)
     document.querySelectorAll('.checkbox-item').forEach(item => {
         const input = item.querySelector('input');
         if (input && input.value === "") {
@@ -97,6 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     updateRequiredStatus();});
 
+    // COntrôle du type des champs : utiliser data-format="" dans la balise input
     const applyFormatting = (input, type) => {
         if (type === 'num') {
             input.value = input.value.replace(/[^0-9]/g, '');
@@ -120,6 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+// Affichage de l'aperçu des photos
 function renderPhotos() {
     photoPreviewContainer.innerHTML = "";
 
@@ -192,9 +198,10 @@ function renderPhotos() {
     }
 }
 
+// Gestion des champs relatifs à la puissance du raccordement
 function updatePuissance() {
-    const selectRacc = document.getElementById("puissanceRaccordement");
-    const selectSous = document.getElementById("puissanceSouscrite");
+    const selectRacc = document.getElementById("puissanceRaccordement"); // Puissance raccordement
+    const selectSous = document.getElementById("puissanceSouscrite"); // Puissance souscrite
     const isMono = document.getElementById("monophase").checked;
     
     if (!selectRacc) return;
@@ -202,20 +209,20 @@ function updatePuissance() {
     selectRacc.innerHTML = "";
     if (selectSous) selectSous.innerHTML = "";
 
-    const optionsRacc = isMono ? ["3 kVA", "12 kVA"] : ["3 kVA", "36 kVA"];
-    selectRacc.add(new Option("Sélectionnez le raccordement", ""));
+    const optionsRacc = isMono ? ["12 kVA", "3 kVA"] : ["36 kVA", "3 kVA"]; 
     optionsRacc.forEach(pwr => {
         selectRacc.add(new Option(pwr, pwr));
     });
+    selectRacc.selectedIndex = 0;
 
     if (selectSous) {
-        selectSous.add(new Option("Sélectionnez la puissance souhaitée", ""));
         let paliers;
         if (isMono) {
-            paliers = ["3 kVA", "6 kVA", "9 kVA", "12 kVA"];
+            paliers = ["6 kVA", "3 kVA", "9 kVA", "12 kVA"];
         } else {
-            paliers = ["6 kVA", "9 kVA", "12 kVA", "15 kVA", "18 kVA", "24 kVA", "30 kVA", "36 kVA"];
+            paliers = ["18 kVA", "6 kVA", "9 kVA", "12 kVA", "15 kVA", "24 kVA", "30 kVA", "36 kVA"];
         }
+        selectSous.add(new Option("Sélectionnez la puissance souhaitée", ""));
         paliers.forEach(pwr => {
             selectSous.add(new Option(pwr, pwr));
         });
@@ -405,16 +412,19 @@ document.getElementById("generatePDF").onclick = async (e) => {
         listeTravaux: Array.from(document.querySelectorAll('input[name="listeTravaux"]:checked'))
             .map(cb => "- " + cb.parentElement.textContent.trim())
             .join("<br />"),        commTravaux: document.getElementById("commTravaux").value || "",
+
+	// Autre
         signature: document.getElementById("signature-representant-canvas").toDataURL(),
         photos: photoList
     };
-
+    
+    // Génération du zip
     try {
+	const zip = new JSZip();
+
         const pdfBlob = await genererPDF(data);
-
-        const zip = new JSZip();
-
 	zip.file(`Rapport_${data.nomCli}_${data.ileCli}.pdf`, pdfBlob);
+
         const htmlTemplate = generateHTMLReport(data);
         zip.file("CONSULTATION.html", htmlTemplate);
 
@@ -456,6 +466,7 @@ document.getElementById("generatePDF").onclick = async (e) => {
     }
 };
 
+// Création du pdf data -> blob pdf
 async function genererPDF(data) {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({
@@ -465,10 +476,11 @@ async function genererPDF(data) {
         compress: true
     });
 
+    // Couleurs
     const bleuEDF = [0, 91, 187];
     const grisFonce = [80, 80, 80];
 
-    // --- EN-TÊTE ---
+    // En-tête
     try {
         pdf.addImage('../EDF.png', 'PNG', 160, 10, 35, 18);
     } catch (e) {
@@ -486,7 +498,7 @@ async function genererPDF(data) {
 
     let y = 50;
 
-    // Fonction utilitaire pour ajouter une section
+    // Ajout de section
     const addSection = (title) => {
         y += 5;
         pdf.setFontSize(12);
@@ -503,7 +515,7 @@ async function genererPDF(data) {
         pdf.setTextColor(0, 0, 0);
     };
 
-    // Fonction utilitaire pour ajouter une ligne de donnée
+    // Ajout d'une ligne
     const addData = (label, value) => {
         if (y > 270) { pdf.addPage(); y = 20; }
         pdf.setFont("helvetica", "bold");
@@ -515,7 +527,7 @@ async function genererPDF(data) {
         y += (splitVal.length * 5) + 2;
     };
 
-    // --- SECTION : CLIENT ---
+    // Section client
     addSection("COORDONNÉES CLIENT");
     addData("Nom", data.nomCli);
     addData("Prénom", data.prenomCli);
@@ -525,7 +537,7 @@ async function genererPDF(data) {
     addData("Complément", data.complementAdrCli);
     addData("N° Dossier OSR", data.noDossier);
 
-    // --- SECTION : RÉSEAU ---
+    // Section réseau
     addSection("DONNÉES RÉSEAU");
     addData("Dipôle n°", data.noDipole);
     addData("Distance amont", `${data.distAmont} m`);
@@ -536,7 +548,7 @@ async function genererPDF(data) {
     addData("Poste HTA/BT", data.nomPosteHTABT);
     addData("GDO Poste", data.codeGDOPosteHTABT);
 
-    // --- SECTION : BRANCHEMENT ---
+    // Section branchement
     addSection("CARACTÉRISTIQUES BRANCHEMENT");
     addData("Technique", data.techBranchement);
     addData("Type", data.typeBranchement);
@@ -550,7 +562,7 @@ async function genererPDF(data) {
     addData("P. Raccordement", `${data.puissanceRaccordement} kVA`);
     addData("P. Souscrite", `${data.puissanceSouscrite} kVA`);
 
-    // --- SECTION : TRAVAUX ---
+    // Section travaux
     addSection("SUIVI DES TRAVAUX");
     addData("Local > 2 ans", data.localHabitation);
     addData("Charge demandeur", data.travauxChargeDemandeur);
@@ -559,7 +571,7 @@ async function genererPDF(data) {
     addData("Liste travaux", data.listeTravaux);
     addData("Commentaires", data.commTravaux);
 
-    // --- SECTION : SIGNATURE ---
+    // Section signature
     y += 10;
     if (y > 230) { pdf.addPage(); y = 30; }
     pdf.setFont("helvetica", "bold");
@@ -572,7 +584,7 @@ async function genererPDF(data) {
         pdf.text("[Erreur chargement signature]", 25, y + 10);
     }
 
-    // PIED DE PAGE SUR TOUTES LES PAGES
+    // Pied de page
     const pageCount = pdf.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         pdf.setPage(i);
@@ -584,17 +596,7 @@ async function genererPDF(data) {
     return pdf.output('blob');
 }
 
-window.syncIdentite = () => {
-    document.getElementById('nomTravaux').value = document.getElementById('nomCli').value;
-    document.getElementById('prenomTravaux').value = document.getElementById('prenomCli').value;
-};
-
-window.copyAdresseClient = () => {
-    document.getElementById('adresseTravaux').value = document.getElementById('adresseCli').value;
-    document.getElementById('cpTravaux').value = document.getElementById('cpCli').value;
-    document.getElementById('villeTravaux').value = document.getElementById('villeCli').value;
-};
-
+// Afficher cacher le champ schemaIRVE
 function toggleIRVE() {
     const selectIRVE = document.getElementById('IRVE');
     const sectionSchema = document.getElementById('section-schema-irve');
@@ -602,15 +604,16 @@ function toggleIRVE() {
 
     if (selectIRVE.value === "IRVE") {
         sectionSchema.style.display = 'block';
-        // On peut rendre le choix obligatoire si affiché
+        // être sûr que le champ soit obligatoire si affiché
         radiosIRVE.forEach(r => r.required = true);
     } else {
         sectionSchema.style.display = 'none';
-        // On retire l'obligation et on décoche
+        // on met le champ en facultatif et non coché si non affiché
         radiosIRVE.forEach(r => {
             r.required = false;
             r.checked = false;
         });
     }
 }
+// on vérifie le IRVE au chargement de la page
 document.addEventListener('DOMContentLoaded', toggleIRVE);
