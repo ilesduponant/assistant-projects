@@ -311,10 +311,14 @@ async function getLocation() {
             latInput.value = firstPos.coords.latitude.toFixed(6);
             lonInput.value = firstPos.coords.longitude.toFixed(6);
         }
+	
+	btnGps.style.backgroundColor = "#4fbe40";
+	btnGps.style.color = "white";
 
     } catch (error) {
         latInput.value = "Erreur";
         lonInput.value = "Erreur";
+	btnGps.style.backgroundColor = "#ff0000";
         alert("❌ Erreur GPS : " + error.message);
     }
 }

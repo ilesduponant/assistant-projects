@@ -60,7 +60,7 @@
 	        <input type="integer" id="distAmont" data-format="decimal" />
 		<label>Point GPS du dipôle <br /><small>Relevé au pied de l'ouvrage pour la précision carto.</small></label>
                 <div style="display: flex; gap: 5px; align-items: center;">
-		    <button type="button" onclick="getLocation()" title="Obtenir ma position" style="width: 44px;"><i data-lucide="map-pin"></i></button>
+		    <button type="button" id="btnGps" onclick="getLocation()" title="Obtenir ma position" style="width: 44px;"><i data-lucide="map-pin"></i></button>
                     <input type="text" id="gps-lat" placeholder="Latitude" readonly style="flex: 1;" />
                     <input type="text" id="gps-lon" placeholder="Longitude" readonly style="flex: 1;" />
                 </div>    
@@ -125,7 +125,7 @@
 
                 <h3>Chiffrage</h3>
                 <label for="domaineIntervention">Domaine d'intervention</label>
-                <select id="domaineIntervention" onchange="this.style.width = (this.options[this.selectedIndex].text.length + 3) + 'ch'" required >
+                <select id="domaineIntervention" required >
                     <option value="" disabled selected >Sélectionnez un domaine d'intervention</option>
 		    <option value="Dérivation individuelle + Liaison réseau" >Liaison Réseau <small>Partie A</small> + Dérivation individuelle <small>Partie B</smalL></option>
                     <option value="Dérivation individuelle" >Dérivation individuelle</option>
@@ -240,7 +240,8 @@
 	        <button type="button" id="clear-representant" class="remove-sign" >Effacer</button>
 	        
                 <hr />
-                <button type="submit" id="generatePDF">Générer le PDF</button>
+                <button type="submit" id="generatePDF">Valider</button>
+		<div style="margin-top:0; text-align:center;"><small>Envoi des informations par e-mail et téléchargement d'un pdf</small></div>
             </form>
         </main>
         <script>
