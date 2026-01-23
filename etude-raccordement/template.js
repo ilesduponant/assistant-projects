@@ -1,3 +1,4 @@
+// Format des dates
 const formatDate = (dateStr) => {
     if (!dateStr || dateStr === "") return "N/A";
     const parts = dateStr.split('-');
@@ -13,6 +14,7 @@ const generateHTMLReport = (data) => {
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Rapport - ${data.noDossier}</title>
+	<!-- Pas besoin d'un fichier css en plus -->
 	<style>
 	    * { margin: 0; padding: 0; box-sizing: border-box; }
 	    body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -59,7 +61,7 @@ const generateHTMLReport = (data) => {
 		    </div>
 		` : ''}
 	    </section>
-
+	    
 	    <section class="info-card">
 		<h3>Données Réseau</h3>
     
@@ -126,7 +128,7 @@ const generateHTMLReport = (data) => {
         
 	    <section class="info-card">
 		<h3>Détails des Travaux</h3>
-		<div class="row"><span class="label">Charge demandeur :</span><span class="val">${data.travauxChargeDemandeur}</span></div>
+		<div class="row"><span class="label">Travaux à charge du demandeur :</span><span class="val">${data.travauxChargeDemandeur}</span></div>
 		${data.travauxChargeDemandeur === 'Oui' ? `
 		   <div style="margin-top:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
 			<p><strong>Dates :</strong> Prévue le ${formatDate(data.datePrevue)} / Réelle le ${formatDate(data.dateReelle)}</p>

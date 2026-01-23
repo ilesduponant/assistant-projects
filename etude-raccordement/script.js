@@ -229,6 +229,7 @@ function updatePuissance() {
     }
 }
 
+// Affichage des champs relatifs aux travaux en fonction de la sélection sur
 function toggleTravaux() {
     const section = document.getElementById("sectionTravaux");
     const isOui = document.querySelector('input[name="travauxChargeDemandeur"][value="Oui"]').checked;
