@@ -73,7 +73,7 @@ if (sendBtn) {
 
         // On récupère les valeurs proprement
         const ileDest = document.getElementById("ile")?.value || "N/A";
-        const descriptionText = document.querySelector("description")?.value || "N/A";
+        const description = document.querySelector("description")?.value || "N/A";
 
         sendBtn.disabled = true;
         sendBtn.textContent = "⌛ Envoi en cours...";
