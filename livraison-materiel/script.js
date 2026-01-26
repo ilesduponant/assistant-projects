@@ -1,4 +1,4 @@
-// --- 1. VARIABLES GLOBALES (Accessibles partout) ---
+// --- 1. VARIABLES GLOBALES ---
 let photoList = []; 
 const photoPreviewContainer = document.getElementById("photo-preview");
 
@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const cameraCanvas = document.getElementById("camera-canvas");
     const cameraContext = cameraCanvas.getContext("2d");
 
-    // Gestion des photos depuis la galerie
     if (photosInput) {
         photosInput.addEventListener("change", (event) => {
             const files = Array.from(event.target.files);
@@ -26,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Allumer la caméra
     if (takePhotoButton) {
         takePhotoButton.addEventListener("click", async () => {
             try {
@@ -42,7 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Capturer la photo depuis le flux vidéo
     if (savePhotoButton) {
         savePhotoButton.addEventListener("click", () => {
             try {
@@ -67,56 +64,57 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// --- 3. LOGIQUE D'ENVOI (Bouton Send) ---
+// --- 3. LOGIQUE D'ENVOI ---
 const sendBtn = document.getElementById("send");
 if (sendBtn) {
     sendBtn.onclick = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+        e.preventDefault();
+        if (!validateForm()) return;
 
-    const data = {
-	    ile = document.getElementById("ile")?.value || "N/A",
-	    description = document.getElementById("description")?.value || "N/A"
-    }
-    sendBtn.disabled = true;
-    sendBtn.textContent = "⌛ Envoi en cours...";
+        // On récupère les valeurs proprement
+        const ileDest = document.getElementById("ileCli")?.value || "N/A";
+        const descriptionText = document.querySelector("textarea")?.value || "N/A";
 
-    try {
-        // On prépare les pièces jointes : un tableau d'objets
-        const attachments = photoList.map((p, i) => ({
-            filename: `photo_${ileDest}_${i + 1}.png`,
-            content: p.current.split(',')[1], // Le base64 pur
-            type: 'image/png'
-        }));
+        sendBtn.disabled = true;
+        sendBtn.textContent = "⌛ Envoi en cours...";
 
-        const response = await fetch('https://assistant-projects.vercel.app/api/send_colis', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ile: ileDest,
-                subject: `LIVRAISON - ${ileDest}`, // Sujet clair pour ta règle Outlook
-                files: attachments // On envoie le tableau de fichiers
-            })
-        });
+        try {
+            const attachments = photoList.map((p, i) => ({
+                filename: `photo_${ileDest}_${i + 1}.png`,
+                content: p.current.split(',')[1],
+                type: 'image/png'
+            }));
 
-        if (response.ok) {
-            alert("✅ Livraison envoyée !");
-            // Optionnel : vider la liste après succès
-            photoList = [];
-            renderPhotos();
-        } else {
-            alert("❌ Erreur : " + response.status);
+            const response = await fetch('https://assistant-projects.vercel.app/api/send_colis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ile: ileDest,
+                    description: descriptionText,
+                    subject: `LIVRAISON - ${ileDest}`,
+                    files: attachments
+                })
+            });
+
+            if (response.ok) {
+                alert("✅ Livraison envoyée !");
+                photoList = [];
+                renderPhotos();
+                document.querySelector("form")?.reset();
+            } else {
+                alert("❌ Erreur : " + response.status);
+            }
+
+        } catch (err) {
+            alert("❌ Erreur technique : " + err.message);
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = "Envoyer";
         }
+    };
+}
 
-    } catch (err) {
-        alert("❌ Erreur technique : " + err.message);
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.textContent = "Envoyer";
-    }
-};}
-
-// --- 4. FONCTIONS UTILITAIRES (Affichage et Validation) ---
+// --- 4. FONCTIONS UTILITAIRES ---
 
 function renderPhotos() {
     if (!photoPreviewContainer) return;
@@ -129,7 +127,7 @@ function renderPhotos() {
 
         const deleteBtn = document.createElement("div");
         deleteBtn.innerHTML = '<i data-lucide="trash-2"></i>';
-        deleteBtn.className = "delete-button"; // Utilise ton CSS
+        deleteBtn.className = "delete-button"; 
         
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
