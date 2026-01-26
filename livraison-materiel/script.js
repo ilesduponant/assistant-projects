@@ -72,15 +72,15 @@ if (sendBtn) {
         if (!validateForm()) return;
 
         // On récupère les valeurs proprement
-        const ileDest = document.getElementById("ileCli")?.value || "N/A";
-        const descriptionText = document.querySelector("textarea")?.value || "N/A";
+        const ileDest = document.getElementById("ile")?.value || "N/A";
+        const descriptionText = document.querySelector("description")?.value || "N/A";
 
         sendBtn.disabled = true;
         sendBtn.textContent = "⌛ Envoi en cours...";
 
         try {
             const attachments = photoList.map((p, i) => ({
-                filename: `photo_${ileDest}_${i + 1}.png`,
+                filename: `photo_${ile}_${i + 1}.png`,
                 content: p.current.split(',')[1],
                 type: 'image/png'
             }));
@@ -91,7 +91,7 @@ if (sendBtn) {
                 body: JSON.stringify({
                     ile: ileDest,
                     description: descriptionText,
-                    subject: `LIVRAISON - ${ileDest}`,
+                    subject: `LIVRAISON - ${ile}`,
                     files: attachments
                 })
             });
