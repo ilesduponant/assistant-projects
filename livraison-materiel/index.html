@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <title>Formulaire étude de raccordement</title>
+        <link rel="stylesheet" href="style.css" />
+	<script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<!-- debug mobile
+	  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+	  <script>eruda.init();</script>
+	-->
+	<script src="script.js" defer></script>
+    </head>
+    <body>
+	<header>
+	    <h1>Livraison de matériel/colis</h1>
+	</header>
+	<main>
+	    <form>
+		<label for="ile">Destination finale</label>
+		<select id="ile" required>
+		    <option value="" selected disabled>Sélectionnez une île</option>
+		    <option value="Ouessant">Ouessant</option>
+		    <option value="Molène">Molène</option>
+		    <option value="Sein">Sein</option>
+		    <option value="Chausey">Chausey</option>
+		    <option value="Glénant">Glénant</option>
+		</select>
+		
+		<hr />
+		<h3 for="photos">Photos du <strong>bon de commande</strong> et du <strong>matériel</strong></h3>
+		<p>Merci </p>
+        <div id="photo-preview"></div>
+		<input
+          type="file"
+          id="photos"
+          class="photo-upload"
+          accept="image/*"
+          multiple
+        />
+
+        <!-- Nouveau bouton pour prendre une photo en direct -->
+        <button type="button" id="take-photo">Prendre une photo </i></button>
+		<video id="camera" autoplay></video>
+		<canvas id="camera-canvas" style="display: none;"></canvas>
+		<!-- Bouton capture photo -->
+		<div style="text-align: center; margin-top: 10px;">
+			<button type="button" id="save-photo" style="display: none;" class="capture-button">
+				<i class="fas fa-camera"></i>
+				<!--<div class="inner-circle"></div>-->
+			</button>
+		</div>
+		
+		<hr />
+                <label for="description">Description</label>
+		<textarea id="description" rows="3" required></textarea>
+
+		<hr />
+		<button id="send">Envoyer</button>
+	    </form>
+        </main>
+	<script>
+            lucide.createIcons()
+        </script>
+    </body>
+</html>

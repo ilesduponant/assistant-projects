@@ -1,0 +1,174 @@
+// --- 1. VARIABLES GLOBALES (Accessibles partout) ---
+let photoList = []; 
+const photoPreviewContainer = document.getElementById("photo-preview");
+
+// --- 2. INITIALISATION AU CHARGEMENT ---
+document.addEventListener("DOMContentLoaded", () => {
+    const photosInput = document.getElementById("photos");
+    const takePhotoButton = document.getElementById("take-photo");
+    const savePhotoButton = document.getElementById("save-photo");
+    const camera = document.getElementById("camera");
+    const cameraCanvas = document.getElementById("camera-canvas");
+    const cameraContext = cameraCanvas.getContext("2d");
+
+    // Gestion des photos depuis la galerie
+    if (photosInput) {
+        photosInput.addEventListener("change", (event) => {
+            const files = Array.from(event.target.files);
+            files.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    photoList.push({ current: e.target.result });
+                    renderPhotos(); 
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    }
+
+    // Allumer la caméra
+    if (takePhotoButton) {
+        takePhotoButton.addEventListener("click", async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" }
+                });
+                camera.srcObject = stream;
+                camera.style.display = "block";
+                savePhotoButton.style.display = "inline-block";
+            } catch (error) {
+                console.error("Erreur caméra :", error);
+            }
+        });
+    }
+
+    // Capturer la photo depuis le flux vidéo
+    if (savePhotoButton) {
+        savePhotoButton.addEventListener("click", () => {
+            try {
+                cameraCanvas.width = camera.videoWidth || 1920;
+                cameraCanvas.height = camera.videoHeight || 1080;
+                cameraContext.drawImage(camera, 0, 0, cameraCanvas.width, cameraCanvas.height);
+
+                const photoData = cameraCanvas.toDataURL("image/png");
+                photoList.push({ current: photoData }); 
+                renderPhotos(); 
+
+                const stream = camera.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach((track) => track.stop());
+                }
+                camera.style.display = "none";
+                savePhotoButton.style.display = "none";
+            } catch (error) {
+                console.error("Erreur enregistrement :", error);
+            }
+        });
+    }
+});
+
+// --- 3. LOGIQUE D'ENVOI (Bouton Send) ---
+const sendBtn = document.getElementById("send");
+if (sendBtn) {
+    sendBtn.onclick = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const data = {
+	    ile = document.getElementById("ile")?.value || "N/A",
+	    description = document.getElementById("description")?.value || "N/A"
+    }
+    sendBtn.disabled = true;
+    sendBtn.textContent = "⌛ Envoi en cours...";
+
+    try {
+        // On prépare les pièces jointes : un tableau d'objets
+        const attachments = photoList.map((p, i) => ({
+            filename: `photo_${ileDest}_${i + 1}.png`,
+            content: p.current.split(',')[1], // Le base64 pur
+            type: 'image/png'
+        }));
+
+        const response = await fetch('https://assistant-projects.vercel.app/api/send_colis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ile: ileDest,
+                subject: `LIVRAISON - ${ileDest}`, // Sujet clair pour ta règle Outlook
+                files: attachments // On envoie le tableau de fichiers
+            })
+        });
+
+        if (response.ok) {
+            alert("✅ Livraison envoyée !");
+            // Optionnel : vider la liste après succès
+            photoList = [];
+            renderPhotos();
+        } else {
+            alert("❌ Erreur : " + response.status);
+        }
+
+    } catch (err) {
+        alert("❌ Erreur technique : " + err.message);
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Envoyer";
+    }
+};}
+
+// --- 4. FONCTIONS UTILITAIRES (Affichage et Validation) ---
+
+function renderPhotos() {
+    if (!photoPreviewContainer) return;
+    photoPreviewContainer.innerHTML = "";
+
+    photoList.forEach((photoObject, idx) => {
+        const photoContainer = document.createElement("div");
+        photoContainer.className = "photo-item";
+        photoContainer.style = "position:relative; display:inline-block; margin:15px; width:180px; vertical-align:top; border:1px solid #ddd; padding:5px; background:#fff; border-radius:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);";
+
+        const deleteBtn = document.createElement("div");
+        deleteBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+        deleteBtn.className = "delete-button"; // Utilise ton CSS
+        
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm("Supprimer cette photo ?")) {
+                photoList.splice(idx, 1);
+                renderPhotos();
+            }
+        };
+        
+        photoContainer.appendChild(deleteBtn);
+
+        const img = document.createElement("img");
+        img.src = photoObject.current; 
+        img.style = "width:100%; height:auto; display:block; border-radius:3px;"; 
+        
+        photoContainer.appendChild(img);
+        photoPreviewContainer.appendChild(photoContainer);
+    });
+
+    if (window.lucide) lucide.createIcons();
+}
+
+function validateForm() {
+    const requiredFields = document.querySelectorAll("[required]");
+    let missingFields = [];
+
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            const label = field.previousElementSibling?.innerText || field.placeholder || "Champ requis";
+            missingFields.push(label);
+            field.style.border = "2px solid red";
+        } else {
+            field.style.border = "";
+        }
+    });
+
+    if (missingFields.length > 0) {
+        alert("⚠️ Champs obligatoires manquants :\n- " + missingFields.join("\n- "));
+        return false;
+    }
+    return true;
+}

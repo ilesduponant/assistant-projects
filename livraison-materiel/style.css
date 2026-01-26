@@ -1,0 +1,177 @@
+/* --- Base & Reset --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  color: #333;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+main {
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+hr {
+  border: none;
+  height: 3px;
+  background-color: #007bff;
+  width: 100%;
+  margin: 20px auto;
+}
+
+/* --- Formulaire --- */
+form label {
+  font-weight: bold;
+  display: block;
+  margin: 10px 0 5px;
+}
+
+form input[type="text"],
+form input[type="file"],
+form textarea,
+select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px; /* Empêche le zoom iOS */
+  transition: border-color 0.3s ease;
+}
+
+form input:hover, 
+form textarea:hover, 
+select:hover {
+  border-color: #007BFF;
+}
+
+input.error {
+  border: 2px solid red;
+}
+
+/* --- Boutons --- */
+button {
+  background-color: #007bff;
+  color: white;
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 12px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Bouton spécifique capture caméra (Rond) */
+.capture-button {
+  width: 70px;
+  height: 70px;
+  background-color: #ff5555;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #cccccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px auto;
+}
+
+.capture-button:hover {
+  background-color: #ff0000;
+}
+
+/* --- Gestion des Photos & Aperçus --- */
+#photo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 10px 0;
+  justify-content: center;
+}
+
+.photo-item {
+  position: relative;
+  width: 180px; /* Taille agrandie pour visibilité */
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 5px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.photo-item img {
+  width: 100%;
+  height: auto; /* Ratio respecté */
+  display: block;
+  border-radius: 4px;
+}
+
+/* Bouton supprimer sur la photo */
+.delete-button {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  color: #ff5555;
+  background-color: white;
+  border: 2px solid #ff5555;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.delete-button:hover {
+  color: white;
+  background-color: #ff5555;
+}
+
+/* --- Caméra & Canvas --- */
+#camera {
+  width: 100%;
+  border-radius: 8px;
+  border: 2px solid #333;
+  margin-bottom: 10px;
+  display: none;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid #000;
+  margin-top: 5px;
+}
+
+/* --- Divers --- */
+.text-uppercase {
+  text-transform: uppercase;
+}
+
+footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.9em;
+  color: #666;
+}
