@@ -1,8 +1,6 @@
-// --- 1. VARIABLES GLOBALES ---
 let photoList = []; 
 const photoPreviewContainer = document.getElementById("photo-preview");
 
-// --- 2. INITIALISATION AU CHARGEMENT ---
 document.addEventListener("DOMContentLoaded", () => {
     const photosInput = document.getElementById("photos");
     const takePhotoButton = document.getElementById("take-photo");
@@ -64,14 +62,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// --- 3. LOGIQUE D'ENVOI ---
 const sendBtn = document.getElementById("send");
 if (sendBtn) {
     sendBtn.onclick = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
-        // On récupère les valeurs proprement
         const ileDest = document.getElementById("ile")?.value || "N/A";
         const description = document.querySelector("description")?.value || "N/A";
 
@@ -90,7 +86,7 @@ if (sendBtn) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ile: ileDest,
-                    description: descriptionText,
+                    description: description,
                     subject: `LIVRAISON - ${ile}`,
                     files: attachments
                 })
@@ -113,8 +109,6 @@ if (sendBtn) {
         }
     };
 }
-
-// --- 4. FONCTIONS UTILITAIRES ---
 
 function renderPhotos() {
     if (!photoPreviewContainer) return;
