@@ -19,15 +19,16 @@
 	    <h1>Livraison de matériel/colis</h1>
 	</header>
 	<main>
-	    <form>
+	    <form id="bon-livraison-form">
 		<label for="ile">Destination finale</label>
 		<select id="ile" required>
-		    <option value="" selected disabled>Sélectionnez une île</option>
+		    <option value="" selected disabled>Sélectionnez une destination</option>
+		    <option value="Brest">Brest</option>
 		    <option value="Ouessant">Ouessant</option>
 		    <option value="Molène">Molène</option>
 		    <option value="Sein">Sein</option>
 		    <option value="Chausey">Chausey</option>
-		    <option value="Glénant">Glénant</option>
+		    <option value="Glénan">Glénan</option>
 		</select>
 		
 		<hr />
@@ -49,7 +50,7 @@
 		<!-- Bouton capture photo -->
 		<div style="text-align: center; margin-top: 10px;">
 			<button type="button" id="save-photo" style="display: none;" class="capture-button">
-				<i class="fas fa-camera"></i>
+				<i data-lucide="camera"></i>
 				<!--<div class="inner-circle"></div>-->
 			</button>
 		</div>

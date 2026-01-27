@@ -68,7 +68,7 @@ if (sendBtn) {
         e.preventDefault();
         if (!validateForm()) return;
 
-        const ileDest = document.getElementById("ile")?.value || "N/A";
+        const ile = document.getElementById("ile")?.value || "N/A";
         const description = document.querySelector("description")?.value || "N/A";
 
         sendBtn.disabled = true;
@@ -85,7 +85,7 @@ if (sendBtn) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ile: ileDest,
+                    ile: ile,
                     description: description,
                     subject: `LIVRAISON - ${ile}`,
                     files: attachments
