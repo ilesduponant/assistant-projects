@@ -69,7 +69,7 @@ if (sendBtn) {
         if (!validateForm()) return;
 
         const ile = document.getElementById("ile")?.value || "N/A";
-        const description = document.querySelector("description")?.value || "N/A";
+        const description = document.querySelector("#description")?.value || "N/A";
 
         sendBtn.disabled = true;
         sendBtn.textContent = "⌛ Envoi en cours...";
