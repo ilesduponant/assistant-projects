@@ -28,13 +28,11 @@ window.openEditorInNewTab = function(originalData, index, existingDrawings) {
     padding: 0;
 }
 
-/* Taille de l'icône Lucide */
 .tool-btn i {
     width: 20px;
     height: 20px;
 }
 
-/* Quand le bouton est actif (bleu), l'icône passe en blanc */
 .tool-btn.active i {
     color: white;
 }

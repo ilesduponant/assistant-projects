@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
-
+    // affichage de la caméra
     if (takePhotoButton) {
         takePhotoButton.addEventListener("click", async () => {
             try {
@@ -37,7 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-
+    
+    // bouton pour prendre la photo avec la caméra
     if (savePhotoButton) {
         savePhotoButton.addEventListener("click", () => {
             try {
@@ -62,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// bouton de validation du formulaire
 const sendBtn = document.getElementById("send");
 if (sendBtn) {
     sendBtn.onclick = async (e) => {
@@ -75,12 +77,14 @@ if (sendBtn) {
         sendBtn.textContent = "⌛ Envoi en cours...";
 
         try {
+	    // photos en pj
             const attachments = photoList.map((p, i) => ({
                 filename: `photo_${ile}_${i + 1}.png`,
                 content: p.current.split(',')[1],
                 type: 'image/png'
             }));
 
+	    // appel de la fonction vercel send_colis
             const response = await fetch('https://assistant-projects.vercel.app/api/send_colis', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -110,6 +114,7 @@ if (sendBtn) {
     };
 }
 
+// affichage de l'aperçu des photos
 function renderPhotos() {
     if (!photoPreviewContainer) return;
     photoPreviewContainer.innerHTML = "";
@@ -144,6 +149,7 @@ function renderPhotos() {
     if (window.lucide) lucide.createIcons();
 }
 
+// on regarde si tous les champs sont remplis
 function validateForm() {
     const requiredFields = document.querySelectorAll("[required]");
     let missingFields = [];
