@@ -30,7 +30,7 @@ export default async function handler(req, res) {
             attachments: files.map(f => ({
                 filename: f.filename,
                 content: f.content,
-	    })) 
+            }))
         });
 
         return res.status(200).json({ status: 'success', id: data.id });

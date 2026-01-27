@@ -1,4 +1,4 @@
-let photoList = []; 
+let photoList = [];
 const photoPreviewContainer = document.getElementById("photo-preview");
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     photoList.push({ current: e.target.result });
-                    renderPhotos(); 
+                    renderPhotos();
                 };
                 reader.readAsDataURL(file);
             });
@@ -46,8 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 cameraContext.drawImage(camera, 0, 0, cameraCanvas.width, cameraCanvas.height);
 
                 const photoData = cameraCanvas.toDataURL("image/png");
-                photoList.push({ current: photoData }); 
-                renderPhotos(); 
+                photoList.push({ current: photoData });
+                renderPhotos();
 
                 const stream = camera.srcObject;
                 if (stream) {
@@ -121,8 +121,8 @@ function renderPhotos() {
 
         const deleteBtn = document.createElement("div");
         deleteBtn.innerHTML = '<i data-lucide="trash-2"></i>';
-        deleteBtn.className = "delete-button"; 
-        
+        deleteBtn.className = "delete-button";
+
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
             if (confirm("Supprimer cette photo ?")) {
@@ -130,13 +130,13 @@ function renderPhotos() {
                 renderPhotos();
             }
         };
-        
+
         photoContainer.appendChild(deleteBtn);
 
         const img = document.createElement("img");
-        img.src = photoObject.current; 
-        img.style = "width:100%; height:auto; display:block; border-radius:3px;"; 
-        
+        img.src = photoObject.current;
+        img.style = "width:100%; height:auto; display:block; border-radius:3px;";
+
         photoContainer.appendChild(img);
         photoPreviewContainer.appendChild(photoContainer);
     });
