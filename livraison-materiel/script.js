@@ -97,6 +97,7 @@ if (sendBtn) {
             });
 
             if (response.ok) {
+                clearDraft();
                 alert("✅ Livraison envoyée !");
                 photoList = [];
                 renderPhotos();
@@ -149,6 +150,30 @@ function renderPhotos() {
     if (window.lucide) lucide.createIcons();
 }
 
+window.addEventListener('load', () => {
+  const inputs = document.querySelectorAll('input, textarea, select');
+
+  inputs.forEach(field => {
+    if (!field.id || field.type === 'file') return; // Ignore les fichiers et les champs sans ID
+
+    // Restauration
+    const savedValue = localStorage.getItem(`draft_${field.id}`);
+    if (savedValue !== null) field.value = savedValue;
+
+    // Sauvegarde
+    field.addEventListener('input', () => {
+      localStorage.setItem(`draft_${field.id}`, field.value);
+    });
+  });
+});
+
+function clearDraft() {
+  const inputs = document.querySelectorAll('input, textarea, select');
+  inputs.forEach(field => {
+    if (field.id) localStorage.removeItem(`draft_${field.id}`);
+    if (field.type !== 'file') field.value = ''; // On ne vide pas le champ file comme ça
+  });
+}
 // on regarde si tous les champs sont remplis
 function validateForm() {
     const requiredFields = document.querySelectorAll("[required]");
